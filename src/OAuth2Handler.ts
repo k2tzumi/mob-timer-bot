@@ -1,5 +1,5 @@
-import { OAuth2 } from "apps-script-oauth2/src/OAuth2";
-import { Service } from "apps-script-oauth2/src/Service";
+import * as OAuth2 from "apps-script-oauth2/src/OAuth2";
+import {} from "apps-script-oauth2/src/Service";
 
 type Properties = GoogleAppsScript.Properties.Properties;
 type HtmlOutput = GoogleAppsScript.HTML.HtmlOutput;
@@ -118,7 +118,7 @@ class OAuth2Handler {
   public static readonly SCOPE =
     "commands,chat:write,channels:history,groups:history,mpim:history,im:history";
 
-  private service: Service;
+  private service: Service_;
 
   private oAuthAccess: OauthAccess;
 
