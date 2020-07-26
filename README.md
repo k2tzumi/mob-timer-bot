@@ -4,10 +4,26 @@
 What is this?
 ==============================
 
- This bot is a special slack reminder that can be used for pairing and mob programming.
+ This bot is a special slack reminder that can be used for pairing and mob programming.  
   This bot runs as a web app within a Google app script.  
 You can make this bot work by registering it as a request URL for the [Slack API](https://api.slack.com/apps) slash command.
- 
+
+![movie](https://user-images.githubusercontent.com/1182787/88473078-e71f1d80-cf54-11ea-81a1-0ef551e4feb4.gif)
+
+Slack slash command
+--------------------
+
+See help.  
+* Help command execution method
+```
+/mob help
+```
+* When you start mob programming  
+```
+/mob
+```
+
+
 REQUIREMENTS
 --------------------
 - `npm`
@@ -48,6 +64,7 @@ In order to run the application and change its behavior, you need to set the fol
 |VERIFICATION_TOKEN|○|Basic Information > App Credentials > Verification Token|A token that easily authenticates the source of a hooked request|
 |CLIENT_ID|○|Basic Information > App Credentials > Client ID|Use with OAuth|
 |CLIENT_SECRET|○|Basic Information > App Credentials > Client Secret|Use with OAuth|
+|COUNT_DOWN_NOTIFICATION_TIME||N minutes before the end of the mob|default `5` minutes.<br>min 1 minutes(Accept suspend time), max 360 minutes(Maximum cache retention time)|
 
 1. Open Project  
 `$ make open`
