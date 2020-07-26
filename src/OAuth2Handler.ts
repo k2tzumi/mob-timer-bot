@@ -175,6 +175,7 @@ class OAuth2Handler {
     const options: URLFetchRequestOptions = {
       contentType: "application/x-www-form-urlencoded",
       method: "post",
+      muteHttpExceptions: true,
       payload: formData
     };
 
@@ -190,7 +191,9 @@ class OAuth2Handler {
 
       return this.oAuthAccess;
     } else {
-      console.warn(`error: ${this.oAuthAccess.error}`);
+      console.warn(
+        `OAuth2 access error. response: ${JSON.stringify(this.oAuthAccess)}`
+      );
       return null;
     }
   }
