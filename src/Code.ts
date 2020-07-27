@@ -338,7 +338,7 @@ function createConfirmBlocks(form: FormValue): {}[] {
             form.users
           )}\nselected.\n:two: Select an time :white_check_mark:.\n${
             form.time
-          } minutes selected.`
+            } minutes selected.`
         }
       ]
     },
@@ -524,11 +524,11 @@ function createMobbingBlocks(form: FormValue, endTime: Date): {}[] {
       elements: [
         {
           type: "mrkdwn",
-          text: `:clock9: ${Utilities.formatDate(
+          text: `:clock9: *${Utilities.formatDate(
             endTime,
             "JST",
             "HH:mm:ss"
-          )} (${form.time} minutes later)`
+          )}* (_${form.time} minutes later_)`
         }
       ]
     },
@@ -625,6 +625,24 @@ function createMobedBlocks(form: FormValue): {}[] {
           },
           value: createFormValue(form.users, form.time, null, form.times),
           style: "danger",
+          confirm: {
+            title: {
+              type: "plain_text",
+              text: "Are you sure?"
+            },
+            text: {
+              type: "mrkdwn",
+              text: "Do you want to exit mob?"
+            },
+            confirm: {
+              type: "plain_text",
+              text: "Do Finish"
+            },
+            deny: {
+              type: "plain_text",
+              text: "Go back to mob"
+            }
+          },
           action_id: "finish"
         }
       ]
