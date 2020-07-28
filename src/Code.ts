@@ -338,7 +338,7 @@ function createConfirmBlocks(form: FormValue): {}[] {
             form.users
           )}\nselected.\n:two: Select an time :white_check_mark:.\n${
             form.time
-            } minutes selected.`
+          } minutes selected.`
         }
       ]
     },
@@ -349,11 +349,21 @@ function createConfirmBlocks(form: FormValue): {}[] {
           type: "button",
           text: {
             type: "plain_text",
-            text: "Shake the dice :dart:"
+            text: "Shuffle Start :twisted_rightwards_arrows:"
           },
           value: createFormValue(form.users, form.time),
           style: "primary",
-          action_id: "shake"
+          action_id: "shuffle"
+        },
+        {
+          type: "button",
+          text: {
+            type: "plain_text",
+            text: "Nomal Start :motorway:"
+          },
+          value: createFormValue(form.users, form.time),
+          style: "primary",
+          action_id: "start"
         },
         {
           type: "button",
@@ -389,10 +399,16 @@ const executeButton = (blockActions: BlockActions): {} => {
     case "cancel":
       response.delete_original = "true";
       break;
-    case "shake":
+    case "shuffle":
       webhook.invoke({ replace_original: "true", blocks });
 
       client.chatPostMessage(channel, "", null, null, createStartBlocks(form));
+      return {};
+    case "reshuffle":
+      webhook.invoke({
+        replace_original: "true",
+        blocks: createStartBlocks(form)
+      });
       return {};
     case "continue":
       blocks.pop();
@@ -483,11 +499,20 @@ function createStartBlocks(form: FormValue): {}[] {
           type: "button",
           text: {
             type: "plain_text",
-            text: "Start Mobbing :tada:"
+            text: "Start Mobbing :motorway:"
           },
           value: createFormValue(form.users, form.time),
           style: "primary",
           action_id: "start"
+        },
+        {
+          type: "button",
+          text: {
+            type: "plain_text",
+            text: "One more :twisted_rightwards_arrows:"
+          },
+          value: createFormValue(form.users, form.time),
+          action_id: "reshuffle"
         },
         {
           type: "button",
@@ -547,6 +572,24 @@ function createMobbingBlocks(form: FormValue, endTime: Date): {}[] {
             form.scheduled_message_id,
             form.times
           ),
+          confirm: {
+            title: {
+              type: "plain_text",
+              text: "Are you sure?"
+            },
+            text: {
+              type: "mrkdwn",
+              text: "Do you want to exit mob?"
+            },
+            confirm: {
+              type: "plain_text",
+              text: "Do Finish"
+            },
+            deny: {
+              type: "plain_text",
+              text: "Go back to mob"
+            }
+          },
           action_id: "exit"
         }
       ]
