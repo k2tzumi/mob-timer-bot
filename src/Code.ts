@@ -455,6 +455,17 @@ const executeButton = (blockActions: BlockActions): {} => {
       }
 
       return {};
+    case "turn_end":
+      client.chatDeleteScheduleMessage(channel, form.scheduled_message_id);
+      blocks.pop();
+      webhook.invoke({ replace_original: "true", blocks });
+      if (form.times) {
+        form.times++;
+      } else {
+        form.times = 1;
+      }
+      client.chatPostMessage(channel, "", null, null, createMobedBlocks(form));
+      break;
     case "exit":
       client.chatDeleteScheduleMessage(channel, form.scheduled_message_id);
     case "finish":
@@ -564,6 +575,21 @@ function createMobbingBlocks(form: FormValue, endTime: Date): {}[] {
           type: "button",
           text: {
             type: "plain_text",
+            text: "Turn end :black_joker:"
+          },
+          value: createFormValue(
+            form.users,
+            form.time,
+            form.scheduled_message_id,
+            form.times
+          ),
+          style: "primary",
+          action_id: "turn_end"
+        },
+        {
+          type: "button",
+          text: {
+            type: "plain_text",
             text: "Exit :door:"
           },
           value: createFormValue(
@@ -598,7 +624,7 @@ function createMobbingBlocks(form: FormValue, endTime: Date): {}[] {
 
   // hidden exit button
   if (form.time <= COUNT_DOWN_NOTIFICATION_TIME) {
-    blocks.pop();
+    blocks[blocks.length - 1].elements.pop();
   }
 
   return blocks;
@@ -715,10 +741,14 @@ const countDown = (): void => {
       const messages = client.conversationsHistory(channel, ts, 1, ts);
 
       const blocks = messages[0].blocks;
-      const block = blocks.pop();
 
-      // Exists exit button
-      if (block.type === "actions") {
+      if (blocks[blocks.length - 1].type === "actions") {
+        if (blocks[blocks.length - 1].elements.length === 2) {
+          blocks[blocks.length - 1].elements.pop();
+        } else {
+          blocks.pop();
+        }
+        // Exists exit button
         client.chatUpdate(channel, ts, null, blocks);
         client.chatPostMessage(channel, createCountDownMessage(form));
       }
