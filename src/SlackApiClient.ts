@@ -225,7 +225,7 @@ class SlackApiClient {
   public chatDeleteScheduleMessage(
     channel: string,
     scheduled_message_id: string
-  ): void {
+  ): boolean {
     const endPoint = SlackApiClient.BASE_PATH + "chat.deleteScheduledMessage";
     const payload: {} = {
       channel,
@@ -241,8 +241,12 @@ class SlackApiClient {
             response
           )}, payload: ${JSON.stringify(payload)}`
         );
+      } else {
+        return false;
       }
     }
+
+    return true;
   }
 
   public conversationsHistory(

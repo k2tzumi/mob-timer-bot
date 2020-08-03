@@ -456,18 +456,20 @@ const executeButton = (blockActions: BlockActions): {} => {
 
       return {};
     case "turn_end":
-      client.chatDeleteScheduleMessage(channel, form.scheduled_message_id);
-      blocks.pop();
       webhook.invoke({ replace_original: "true", blocks });
+      if (
+        !client.chatDeleteScheduleMessage(channel, form.scheduled_message_id)
+      ) {
+        return {};
+      }
       if (form.times) {
         form.times++;
       } else {
         form.times = 1;
       }
       client.chatPostMessage(channel, "", null, null, createMobedBlocks(form));
-      break;
-    case "exit":
-      client.chatDeleteScheduleMessage(channel, form.scheduled_message_id);
+
+      return {};
     case "finish":
       webhook.invoke({ replace_original: "true", blocks });
 
@@ -540,7 +542,7 @@ function createStartBlocks(form: FormValue): {}[] {
 }
 
 function createMobbingBlocks(form: FormValue, endTime: Date): {}[] {
-  const blocks = [
+  return [
     {
       type: "context",
       elements: [
@@ -568,66 +570,31 @@ function createMobbingBlocks(form: FormValue, endTime: Date): {}[] {
         }
       ]
     },
-    {
-      type: "actions",
-      elements: [
-        {
-          type: "button",
-          text: {
-            type: "plain_text",
-            text: "Turn end :black_joker:"
-          },
-          value: createFormValue(
-            form.users,
-            form.time,
-            form.scheduled_message_id,
-            form.times
-          ),
-          style: "primary",
-          action_id: "turn_end"
-        },
-        {
-          type: "button",
-          text: {
-            type: "plain_text",
-            text: "Exit :door:"
-          },
-          value: createFormValue(
-            form.users,
-            form.time,
-            form.scheduled_message_id,
-            form.times
-          ),
-          confirm: {
-            title: {
-              type: "plain_text",
-              text: "Are you sure?"
-            },
-            text: {
-              type: "mrkdwn",
-              text: "Do you want to exit mob?"
-            },
-            confirm: {
-              type: "plain_text",
-              text: "Do Finish"
-            },
-            deny: {
-              type: "plain_text",
-              text: "Go back to mob"
-            }
-          },
-          action_id: "exit"
-        }
-      ]
-    }
+    createTurnEndActionBlock(form)
   ];
+}
 
-  // hidden exit button
-  if (form.time <= COUNT_DOWN_NOTIFICATION_TIME) {
-    blocks[blocks.length - 1].elements.pop();
-  }
-
-  return blocks;
+function createTurnEndActionBlock(form: FormValue): {} {
+  return {
+    type: "actions",
+    elements: [
+      {
+        type: "button",
+        text: {
+          type: "plain_text",
+          text: "Turn End :black_joker:"
+        },
+        value: createFormValue(
+          form.users,
+          form.time,
+          form.scheduled_message_id,
+          form.times
+        ),
+        style: "primary",
+        action_id: "turn_end"
+      }
+    ]
+  };
 }
 
 function convertTimes(times?: number): string {
@@ -741,28 +708,41 @@ const countDown = (): void => {
       const messages = client.conversationsHistory(channel, ts, 1, ts);
 
       const blocks = messages[0].blocks;
+      const block = blocks.pop();
 
-      if (blocks[blocks.length - 1].type === "actions") {
-        if (blocks[blocks.length - 1].elements.length === 2) {
-          blocks[blocks.length - 1].elements.pop();
-        } else {
-          blocks.pop();
-        }
-        // Exists exit button
+      // Exists action button
+      if (block.type === "actions") {
         client.chatUpdate(channel, ts, null, blocks);
-        client.chatPostMessage(channel, createCountDownMessage(form));
+        client.chatPostMessage(
+          channel,
+          null,
+          null,
+          null,
+          createCountDownBlocks(form)
+        );
       }
     }
   );
 };
 
-function createCountDownMessage(form: FormValue): string {
-  return `:hourglass_flowing_sand: Hey, ${pickUser(
-    form.users,
-    form.times
-  )}. ${convertTimes(
-    form.times
-  )} mob will finish in ${COUNT_DOWN_NOTIFICATION_TIME} minutes.`;
+function createCountDownBlocks(form: FormValue): {}[] {
+  return [
+    {
+      type: "context",
+      elements: [
+        {
+          type: "mrkdwn",
+          text: `:hourglass_flowing_sand: Hey, ${pickUser(
+            form.users,
+            form.times
+          )}. ${convertTimes(
+            form.times
+          )} mob will finish in ${COUNT_DOWN_NOTIFICATION_TIME} minutes.`
+        }
+      ]
+    },
+    createTurnEndActionBlock(form)
+  ];
 }
 
 const shuffle = ([...array]) => {
