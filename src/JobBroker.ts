@@ -1,6 +1,6 @@
 type Cache = GoogleAppsScript.Cache.Cache;
 type Trigger = GoogleAppsScript.Script.Trigger;
-type JobFunction = ({ }) => void;
+type JobFunction = ({}) => void;
 
 interface JobParameter {
   id: string;
@@ -78,11 +78,11 @@ class JobBroker {
               } else {
                 console.info(
                   `job wait. id: ${
-                  parameter.id
+                    parameter.id
                   }, handler: ${trigger.getHandlerFunction()}, created_at: ${
-                  parameter.created_at
+                    parameter.created_at
                   }, parameter: ${parameter.parameter}, scheduled_at: ${
-                  parameter.scheduled_at
+                    parameter.scheduled_at
                   }, now: ${this.now}`
                 );
               }
@@ -98,7 +98,7 @@ class JobBroker {
           } else {
             console.info(
               `job time out. id: ${id}, handler: ${trigger.getHandlerFunction()}, status: ${state}, parameter: ${
-              parameter.parameter
+                parameter.parameter
               }, created_at: ${created_at}, start_at: ${start_at}`
             );
           }
@@ -121,47 +121,55 @@ class JobBroker {
   }
 
   public consumeJob(closure: JobFunction, handler: string = null): void {
-    const popJob = this.dequeue(
-      handler ? handler : this.consumeJob.caller.name
-    );
+    const scriptLock = LockService.getScriptLock();
 
-    if (popJob) {
-      const { parameter, trigger } = popJob;
-      parameter.state = "starting";
-      parameter.start_at = this.now;
-      this.saveJob(popJob);
-      console.info(
-        `job starting. id: ${parameter.id}, created_at: ${parameter.created_at}, start_at: ${parameter.start_at}, parameter: ${parameter.parameter}`
+    if (scriptLock.tryLock(500)) {
+      const popJob = this.dequeue(
+        handler ? handler : this.consumeJob.caller.name
       );
 
-      try {
-        closure(JSON.parse(parameter.parameter));
-
-        parameter.state = "end";
-        parameter.end_at = this.now;
+      if (popJob) {
+        const { parameter, trigger } = popJob;
+        parameter.state = "starting";
+        parameter.start_at = this.now;
         this.saveJob(popJob);
+
+        scriptLock.releaseLock();
+
         console.info(
-          `job success. id: ${parameter.id}, created_at: ${parameter.created_at}, start_at: ${parameter.start_at}, start_at: ${parameter.end_at}, parameter: ${parameter.parameter}`
+          `job starting. id: ${parameter.id}, created_at: ${parameter.created_at}, start_at: ${parameter.start_at}, parameter: ${parameter.parameter}`
         );
-      } catch (e) {
-        parameter.state = "failed";
-        parameter.end_at = this.now;
-        this.saveJob(popJob);
-        console.warn(
-          `job failed. message: ${e.message}, stack: ${e.stack}, id: ${parameter.id}, created_at: ${parameter.created_at}, start_at: ${parameter.start_at}, start_at: ${parameter.end_at}, parameter: ${parameter.parameter}`
-        );
+
+        try {
+          closure(JSON.parse(parameter.parameter));
+
+          parameter.state = "end";
+          parameter.end_at = this.now;
+          this.saveJob(popJob);
+          console.info(
+            `job success. id: ${parameter.id}, created_at: ${parameter.created_at}, start_at: ${parameter.start_at}, start_at: ${parameter.end_at}, parameter: ${parameter.parameter}`
+          );
+        } catch (e) {
+          parameter.state = "failed";
+          parameter.end_at = this.now;
+          this.saveJob(popJob);
+          console.warn(
+            `job failed. message: ${e.message}, stack: ${e.stack}, id: ${parameter.id}, created_at: ${parameter.created_at}, start_at: ${parameter.start_at}, start_at: ${parameter.end_at}, parameter: ${parameter.parameter}`
+          );
+        }
+
+        return;
       }
+      scriptLock.releaseLock();
 
-      return;
+      console.info(`Nothing active job.`);
     }
-
-    console.info(`Nothing active job.`);
   }
 
   private getCacheKey(trigger: Trigger): string {
     return `${
       this.constructor.name
-      }#${trigger.getHandlerFunction()}#${trigger.getUniqueId()}`;
+    }#${trigger.getHandlerFunction()}#${trigger.getUniqueId()}`;
   }
 
   protected createJob(callback: JobFunction, parameter: {}): Job {
