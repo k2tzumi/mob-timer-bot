@@ -287,13 +287,15 @@ interface FormValue {
   time?: number;
   scheduled_message_id?: string;
   times?: number;
+  finish_at?: number;
 }
 
 function createFormValue(
   users: string[],
   time: number,
   scheduled_message_id: string = null,
-  times: number = null
+  times: number = null,
+  finish_at: number = null
 ): string {
   let form: FormValue = {
     users,
@@ -304,6 +306,9 @@ function createFormValue(
   }
   if (times) {
     form = { ...form, times };
+  }
+  if (finish_at) {
+    form = { ...form, finish_at };
   }
 
   return JSON.stringify(form);
@@ -349,7 +354,7 @@ function createConfirmBlocks(form: FormValue): {}[] {
           type: "button",
           text: {
             type: "plain_text",
-            text: "Shuffle Start :twisted_rightwards_arrows:"
+            text: "Shuffle Start :game_die:"
           },
           value: createFormValue(form.users, form.time),
           style: "primary",
@@ -446,6 +451,7 @@ const executeButton = (blockActions: BlockActions): {} => {
         countDownTime.setMinutes(
           countDownTime.getMinutes() - COUNT_DOWN_NOTIFICATION_TIME
         );
+        form.finish_at = endTime.getTime();
 
         DelayedJobBroker.createJob(countDownTime).performLater(countDown, {
           channel,
@@ -460,6 +466,12 @@ const executeButton = (blockActions: BlockActions): {} => {
       if (
         !client.chatDeleteScheduleMessage(channel, form.scheduled_message_id)
       ) {
+        if (form.finish_at > new Date().getTime()) {
+          client.chatPostMessage(
+            channel,
+            "Please wait for a moment to finish."
+          );
+        }
         return {};
       }
       if (form.times) {
@@ -522,7 +534,7 @@ function createStartBlocks(form: FormValue): {}[] {
           type: "button",
           text: {
             type: "plain_text",
-            text: "One more :twisted_rightwards_arrows:"
+            text: "One more :game_die:"
           },
           value: createFormValue(form.users, form.time),
           action_id: "reshuffle"
@@ -588,7 +600,8 @@ function createTurnEndActionBlock(form: FormValue): {} {
           form.users,
           form.time,
           form.scheduled_message_id,
-          form.times
+          form.times,
+          form.finish_at
         ),
         style: "primary",
         action_id: "turn_end"
