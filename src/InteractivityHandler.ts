@@ -4,7 +4,7 @@ import { Slack } from "./slack/types/index.d";
 type TextOutput = GoogleAppsScript.Content.TextOutput;
 type Interaction = Slack.Interactivity.Interaction;
 type BlockActions = Slack.Interactivity.BlockActions;
-type InteractivityFunction = (interaction: Interaction) => {};
+type InteractivityFunction = (interaction: Interaction) => {} | void;
 
 class InteractivityHandler extends SlackBaseHandler<InteractivityFunction> {
   public handle(e): { performed: boolean; output: TextOutput | null } {
@@ -21,30 +21,33 @@ class InteractivityHandler extends SlackBaseHandler<InteractivityFunction> {
     return { performed: false, output: null };
   }
 
-  private bindInteractivity(interaction: Interaction): {} {
-    const { type, trigger_id, hash, token } = interaction;
+  private bindInteractivity(interaction: Interaction): {} | void {
+    const { type, token } = interaction;
     this.validateVerificationToken(token);
 
-    switch (type) {
-      case "block_actions":
-      case "message_actions":
-        if (this.isHandleProceeded(trigger_id)) {
+    switch (true) {
+      case interaction.hasOwnProperty("trigger_id"):
+        if (this.isHandleProceeded(interaction.trigger_id)) {
           throw new Error(
-            `Interaction payloads duplicate called. type: ${type}, trigger_id: ${trigger_id}`
+            `Interaction payloads duplicate called. request: ${JSON.stringify(
+              interaction
+            )}`
           );
         }
         break;
-      case "view_submission":
-        if (this.isHandleProceeded(hash)) {
+      case interaction.hasOwnProperty("hash"):
+        if (this.isHandleProceeded(interaction.hash)) {
           throw new Error(
-            `Interaction payloads duplicate called. type: ${type}, hash: ${hash}`
+            `Interaction payloads duplicate called. request: ${JSON.stringify(
+              interaction
+            )}`
           );
         }
-        break;
-      case "view_closed":
         break;
       default:
-        throw new Error(`Unknow interaction. type: ${type}`);
+        throw new Error(
+          `Unknow interaction payloads. request: ${JSON.stringify(interaction)}`
+        );
     }
 
     // Prefer subtype listeners for block actions
@@ -56,7 +59,8 @@ class InteractivityHandler extends SlackBaseHandler<InteractivityFunction> {
       );
 
       if (blockActionListener) {
-        return blockActionListener(blockActions);
+        blockActionListener(blockActions);
+        return;
       }
     }
 

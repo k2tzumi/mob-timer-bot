@@ -23,6 +23,7 @@ describe('InteractivityHandler', () => {
             const payload = {
                 type: "block_actions",
                 token: "token",
+                hash: "hash",
                 actions: [
                     {
                         type: "multi_users_select",
@@ -57,7 +58,7 @@ describe('InteractivityHandler', () => {
         it('success', () => {
             const handler = new InteractivityHandler('token');
 
-            handler.addListener('type', (interaction: Interaction): {} => { return {} });
+            handler.addListener('type', (interaction: Interaction): { trigger_id: "dummy" } => { return {} });
         });
     });
 });

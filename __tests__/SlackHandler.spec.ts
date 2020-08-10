@@ -24,6 +24,7 @@ describe('SlackHandler', () => {
             const payload = {
                 type: "block_actions",
                 token: "token",
+                hash: "hash",
                 actions: [
                     {
                         type: "multi_users_select",

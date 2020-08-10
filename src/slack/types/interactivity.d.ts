@@ -45,6 +45,28 @@ declare namespace Slack {
             response_url?: string;
             actions: [ButtonAction | MultiUsersSelectAction | StaticSelectAction | ActionBase];
         }
+        interface ViewSubmission extends Interaction {
+            view: {
+                id: string;
+                type: string;
+                title: { type: string; text: string };
+                submit: { type: string; text: string };
+                blocks: any;
+                private_metadata: string;
+                callback_id: string;
+                state: {
+                    values: any;
+                };
+            };
+            response_urls: string[];
+        }
+        interface DialogSubmission extends Interaction {
+            submission: { [key: string]: string };
+            callback_id: string;
+            state: string;
+            action_ts: string;
+            response_url: string;
+        }
         interface InteractionResponse {
             replace_original?: string;
             delete_original?: string;
