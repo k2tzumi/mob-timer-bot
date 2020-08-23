@@ -416,7 +416,27 @@ const executeButton = (blockActions: BlockActions): {} => {
       });
       return {};
     case "continue":
+      const currentUser = form.users[form.times % form.users.length];
+      // other user takes an action
+      if (
+        !(
+          currentUser === blockActions.user.id ||
+          currentUser === blockActions.user.name
+        )
+      ) {
+        client.chatPostMessage(
+          channel,
+          "",
+          null,
+          null,
+          createConfirmChangeBlocks(form, blockActions.user)
+        );
+
+        return {};
+      }
       blocks.pop();
+    case "recontinue":
+    case "change":
     case "start":
       webhook.invoke({ replace_original: "true", blocks });
       const endTime = new Date();
@@ -756,6 +776,90 @@ function createCountDownBlocks(form: FormValue): {}[] {
     },
     createTurnEndActionBlock(form)
   ];
+}
+
+function createConfirmChangeBlocks(
+  form: FormValue,
+  actionUser: { id: string; name: string }
+): {}[] {
+  return [
+    {
+      type: "context",
+      elements: [
+        {
+          type: "mrkdwn",
+          text: `The next driver is ${pickUser(
+            form.users,
+            form.times
+          )}.\n Do you want <@${actionUser.id}> to take over?`
+        }
+      ]
+    },
+    {
+      type: "actions",
+      elements: [
+        {
+          type: "button",
+          text: {
+            type: "plain_text",
+            text: "Take orver"
+          },
+          value: createFormValue(
+            changeOrder(form, actionUser),
+            form.time,
+            null,
+            form.times
+          ),
+          style: "primary",
+          action_id: "change"
+        },
+        {
+          type: "button",
+          text: {
+            type: "plain_text",
+            text: "In order"
+          },
+          value: createFormValue(form.users, form.time, null, form.times),
+          action_id: "recontinue"
+        },
+        {
+          type: "button",
+          text: {
+            type: "plain_text",
+            text: "Cancel"
+          },
+          value: '{ "cancel": true }',
+          action_id: "cancel"
+        }
+      ]
+    }
+  ];
+}
+
+function changeOrder(
+  form: FormValue,
+  actionUser: { id: string; name: string }
+): string[] {
+  const users = [...form.users];
+  const currentIndex = form.times % users.length;
+  const currentUser = users[currentIndex];
+  let swapIndex = users.indexOf(actionUser.id);
+  let swapUser = actionUser.id;
+
+  if (swapIndex === -1) {
+    swapIndex = users.indexOf(actionUser.name);
+    swapUser = actionUser.name;
+  }
+
+  users[currentIndex] = swapUser;
+
+  if (swapIndex !== -1) {
+    users[swapIndex] = currentUser;
+  } else {
+    users.push(currentUser);
+  }
+
+  return users;
 }
 
 const shuffle = ([...array]) => {
