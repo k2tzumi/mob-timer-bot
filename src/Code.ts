@@ -343,7 +343,7 @@ function createConfirmBlocks(form: FormValue): {}[] {
             form.users
           )}\nselected.\n:two: Select an time :white_check_mark:.\n${
             form.time
-          } minutes selected.`
+            } minutes selected.`
         }
       ]
     },
@@ -802,7 +802,7 @@ function createConfirmChangeBlocks(
           type: "button",
           text: {
             type: "plain_text",
-            text: "Take orver"
+            text: "Take over"
           },
           value: createFormValue(
             changeOrder(form, actionUser),
