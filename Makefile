@@ -11,6 +11,9 @@ help:
 	# clasp setting filePushOrder
 	sed -i -e 's/}/,"filePushOrder":["src\/OAuth2Handler.ts","src\/SlackBaseHandler.ts","src\/BaseError.ts","src\/JobBroker.ts"]}/' .clasp.json
 
+node_modules:
+	npm ci
+
 .PHONY: login
 login: ## Google login
 login:
@@ -43,12 +46,12 @@ pull: .clasp.json
 
 .PHONY: lint
 lint: ## Run tslint
-lint:
+lint: node_modules
 	npm run lint
 
 .PHONY: test
 test: ## Run jest
-test:
+test: node_modules
 	npm test
 
 .PHONY: undeploy
