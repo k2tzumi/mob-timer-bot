@@ -49,6 +49,8 @@ make open
 Publish > Deploy as web app.. > Update  
 Grant access
 
+The URL of the current web app after deployment will be used as the request URL for the OAuth authentication screen and Slack message action.
+
 ### Register with the Slack API
 
 * Create New App  
@@ -78,7 +80,7 @@ Setting Property & Value
 
 * Redirect URLs  
 `Add New Redirect URL` > Add Redirect URL  > `Save URLs`  
-ex) https://script.google.com/macros/s/miserarenaiyo/usercallback  
+For example) https://script.google.com/macros/s/miserarenaiyo/usercallback  
 You can check the Redirect URL in the following way. The `RedirectUri` of the displayed page.  
 `$ make application`  
 * Bot Token Scopes  
@@ -98,7 +100,7 @@ You must specify a destination channel that bot can post to as an app.
 1. Open web application  
 `$ make application`  
 The browser will be launched with the following URL:  
-ex) https://script.google.com/macros/s/miserarenaiyo/exec  
+For example) https://script.google.com/macros/s/miserarenaiyo/exec  
 2. Click `Authorize.`  
 You must specify a destination channel that bot can post to as an app.
 3. Click `Allow`  
@@ -112,14 +114,17 @@ Setting Interactivity & Shortcuts
 When prompted, click the `Setting Slash Commands` to set up an Slash Commands.  
 Thes click the `Setting Interactivity & Shortcuts` to set up an Interactivity.  
 
-### Settings Slash Commands
+### Setting Slack App
+
+Register the URL of the Google Apps script deployed as a web app as the request URL for each of the following items.  
+You can configure the settings from the link that appears after OAuth authentication.
+
+#### Settings Slash Commands
 
 * Create New Command  
 Setting Request URL.  
-ex) https://script.google.com/macros/s/miserarenaiyo/exec  
 
-### Setting Interactivity & Shortcuts
+#### Setting Interactivity & Shortcuts
 
 Turn on.  
 Setting Interactivity Request URL  
-ex) https://script.google.com/macros/s/miserarenaiyo/exec
