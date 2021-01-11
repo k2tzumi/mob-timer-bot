@@ -343,7 +343,7 @@ function createConfirmBlocks(form: FormValue): {}[] {
             form.users
           )}\nselected.\n:two: Select an time :white_check_mark:.\n${
             form.time
-            } minutes selected.`
+          } minutes selected.`
         }
       ]
     },
@@ -841,23 +841,29 @@ function changeOrder(
   actionUser: { id: string; name: string }
 ): string[] {
   const users = [...form.users];
+  let swapIndex = users.indexOf(actionUser.id);
+  const swapUser = actionUser.id;
+
   const currentIndex = form.times % users.length;
   const currentUser = users[currentIndex];
-  let swapIndex = users.indexOf(actionUser.id);
-  let swapUser = actionUser.id;
 
   if (swapIndex === -1) {
-    swapIndex = users.indexOf(actionUser.name);
-    swapUser = actionUser.name;
+    if (currentIndex === users.length - 1) {
+      const last = users.pop();
+      const first = users.shift();
+      users.unshift(last);
+      users.push(first);
+      users.splice(currentIndex, 0, actionUser.id);
+
+      return users;
+    }
+
+    users.push(actionUser.id);
+    swapIndex = users.indexOf(actionUser.id);
   }
 
   users[currentIndex] = swapUser;
-
-  if (swapIndex !== -1) {
-    users[swapIndex] = currentUser;
-  } else {
-    users.push(currentUser);
-  }
+  users[swapIndex] = currentUser;
 
   return users;
 }
@@ -875,4 +881,4 @@ function pickUser(users: string[], times: number) {
   return `<@${user}>`;
 }
 
-export { executeSlashCommand };
+export { executeSlashCommand, changeOrder, FormValue };

@@ -16,7 +16,7 @@ const properites = {
 PropertiesService['getScriptProperties'] = jest.fn(() => properites)
 PropertiesService['getUserProperties'] = jest.fn(() => properites)
 
-import { executeSlashCommand } from "../src/Code";
+import { executeSlashCommand, changeOrder, FormValue } from "../src/Code";
 describe('Code', () => {
     describe('executeSlashCommand', () => {
         it('/', () => {
@@ -48,6 +48,61 @@ describe('Code', () => {
 
             expect(actual).toHaveProperty('response_type', 'ephemeral');
             expect(actual).toHaveProperty('text');
+        });
+    });
+    describe('changeOrder', () => {
+        describe('exists account', () => {
+            it('times-0', () => {
+                const form: FormValue = { users: ['a', 'b', 'c'], times: 0 } as FormValue;
+                const actionUser = { id: 'b', name: 'dummy' };
+
+                const actual = changeOrder(form, actionUser);
+
+                expect(actual).toEqual(['b', 'a', 'c']);
+            });
+            it('times-1', () => {
+                const form: FormValue = { users: ['a', 'b', 'c'], times: 1 } as FormValue;
+                const actionUser = { id: 'a', name: 'dummy' };
+
+                const actual = changeOrder(form, actionUser);
+
+                expect(actual).toEqual(['b', 'a', 'c']);
+            });
+            it('times-2', () => {
+                const form: FormValue = { users: ['a', 'b', 'c'], times: 2 } as FormValue;
+                const actionUser = { id: 'a', name: 'dummy' };
+
+                const actual = changeOrder(form, actionUser);
+
+                expect(actual).toEqual(['c', 'b', 'a']);
+            });
+        });
+
+        describe('new account', () => {
+            it('times-0', () => {
+                const form: FormValue = { users: ['a', 'b', 'c'], times: 0 } as FormValue;
+                const actionUser = { id: 'd', name: 'dummy' };
+
+                const actual = changeOrder(form, actionUser);
+
+                expect(actual).toEqual(['d', 'b', 'c', 'a']);
+            });
+            it('times-1', () => {
+                const form: FormValue = { users: ['a', 'b', 'c'], times: 1 } as FormValue;
+                const actionUser = { id: 'd', name: 'dummy' };
+
+                const actual = changeOrder(form, actionUser);
+
+                expect(actual).toEqual(['a', 'd', 'c', 'b']);
+            });
+            it('times-2', () => {
+                const form: FormValue = { users: ['a', 'b', 'c'], times: 2 } as FormValue;
+                const actionUser = { id: 'd', name: 'dummy' };
+
+                const actual = changeOrder(form, actionUser);
+
+                expect(actual).toEqual(['c', 'b', 'd', 'a']);
+            });
         });
     });
 });
