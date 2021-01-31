@@ -841,29 +841,18 @@ function changeOrder(
   actionUser: { id: string; name: string }
 ): string[] {
   const users = [...form.users];
-  let swapIndex = users.indexOf(actionUser.id);
+  const swapIndex = users.indexOf(actionUser.id);
   const swapUser = actionUser.id;
 
   const currentIndex = form.times % users.length;
   const currentUser = users[currentIndex];
 
   if (swapIndex === -1) {
-    if (currentIndex === users.length - 1) {
-      const last = users.pop();
-      const first = users.shift();
-      users.unshift(last);
-      users.push(first);
-      users.splice(currentIndex, 0, actionUser.id);
-
-      return users;
-    }
-
-    users.push(actionUser.id);
-    swapIndex = users.indexOf(actionUser.id);
+    users.splice(currentIndex, 0, swapUser);
+  } else {
+    users[currentIndex] = swapUser;
+    users[swapIndex] = currentUser;
   }
-
-  users[currentIndex] = swapUser;
-  users[swapIndex] = currentUser;
 
   return users;
 }

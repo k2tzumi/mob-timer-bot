@@ -52,7 +52,7 @@ describe('Code', () => {
     });
     describe('changeOrder', () => {
         describe('exists account', () => {
-            it('times-0', () => {
+            it('times-0|navigator', () => {
                 const form: FormValue = { users: ['a', 'b', 'c'], times: 0 } as FormValue;
                 const actionUser = { id: 'b', name: 'dummy' };
 
@@ -60,7 +60,23 @@ describe('Code', () => {
 
                 expect(actual).toEqual(['b', 'a', 'c']);
             });
-            it('times-1', () => {
+            it('times-0|observer', () => {
+                const form: FormValue = { users: ['a', 'b', 'c'], times: 0 } as FormValue;
+                const actionUser = { id: 'c', name: 'dummy' };
+
+                const actual = changeOrder(form, actionUser);
+
+                expect(actual).toEqual(['c', 'b', 'a']);
+            });
+            it('times-1|navigator', () => {
+                const form: FormValue = { users: ['a', 'b', 'c'], times: 1 } as FormValue;
+                const actionUser = { id: 'c', name: 'dummy' };
+
+                const actual = changeOrder(form, actionUser);
+
+                expect(actual).toEqual(['a', 'c', 'b']);
+            });
+            it('times-1|observer', () => {
                 const form: FormValue = { users: ['a', 'b', 'c'], times: 1 } as FormValue;
                 const actionUser = { id: 'a', name: 'dummy' };
 
@@ -68,13 +84,21 @@ describe('Code', () => {
 
                 expect(actual).toEqual(['b', 'a', 'c']);
             });
-            it('times-2', () => {
+            it('times-2|navigtor', () => {
                 const form: FormValue = { users: ['a', 'b', 'c'], times: 2 } as FormValue;
                 const actionUser = { id: 'a', name: 'dummy' };
 
                 const actual = changeOrder(form, actionUser);
 
                 expect(actual).toEqual(['c', 'b', 'a']);
+            });
+            it('times-2|observer', () => {
+                const form: FormValue = { users: ['a', 'b', 'c'], times: 2 } as FormValue;
+                const actionUser = { id: 'b', name: 'dummy' };
+
+                const actual = changeOrder(form, actionUser);
+
+                expect(actual).toEqual(['a', 'c', 'b']);
             });
         });
 
@@ -85,7 +109,7 @@ describe('Code', () => {
 
                 const actual = changeOrder(form, actionUser);
 
-                expect(actual).toEqual(['d', 'b', 'c', 'a']);
+                expect(actual).toEqual(['d', 'a', 'b', 'c']);
             });
             it('times-1', () => {
                 const form: FormValue = { users: ['a', 'b', 'c'], times: 1 } as FormValue;
@@ -93,7 +117,7 @@ describe('Code', () => {
 
                 const actual = changeOrder(form, actionUser);
 
-                expect(actual).toEqual(['a', 'd', 'c', 'b']);
+                expect(actual).toEqual(['a', 'd', 'b', 'c']);
             });
             it('times-2', () => {
                 const form: FormValue = { users: ['a', 'b', 'c'], times: 2 } as FormValue;
@@ -101,7 +125,7 @@ describe('Code', () => {
 
                 const actual = changeOrder(form, actionUser);
 
-                expect(actual).toEqual(['c', 'b', 'd', 'a']);
+                expect(actual).toEqual(['a', 'b', 'd', 'c']);
             });
         });
     });
