@@ -840,7 +840,7 @@ function changeOrder(
   actionUser: { id: string; name: string }
 ): string[] {
   const users = [...form.users];
-  let swapIndex = users.indexOf(actionUser.id);
+  const swapIndex = users.indexOf(actionUser.id);
   const swapUser = actionUser.id;
 
   const currentIndex = form.times % users.length;
