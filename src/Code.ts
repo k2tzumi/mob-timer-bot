@@ -341,9 +341,8 @@ function createConfirmBlocks(form: FormValue): {}[] {
           type: "mrkdwn",
           text: `:one: Pick users from the list. :white_check_mark:\n${createSelectUserList(
             form.users
-          )}\nselected.\n:two: Select an time :white_check_mark:.\n${
-            form.time
-          } minutes selected.`
+          )}\nselected.\n:two: Select an time :white_check_mark:.\n${form.time
+            } minutes selected.`
         }
       ]
     },
@@ -848,22 +847,11 @@ function changeOrder(
   const currentUser = users[currentIndex];
 
   if (swapIndex === -1) {
-    if (currentIndex === users.length - 1) {
-      const last = users.pop();
-      const first = users.shift();
-      users.unshift(last);
-      users.push(first);
-      users.splice(currentIndex, 0, actionUser.id);
-
-      return users;
-    }
-
-    users.push(actionUser.id);
-    swapIndex = users.indexOf(actionUser.id);
+    users.splice(currentIndex, 0, swapUser);
+  } else {
+    users[currentIndex] = swapUser;
+    users[swapIndex] = currentUser;
   }
-
-  users[currentIndex] = swapUser;
-  users[swapIndex] = currentUser;
 
   return users;
 }
