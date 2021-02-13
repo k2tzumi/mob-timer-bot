@@ -288,6 +288,7 @@ interface FormValue {
   scheduled_message_id?: string;
   times?: number;
   finish_at?: number;
+  remaining_time?: number;
 }
 
 function createFormValue(
@@ -295,7 +296,8 @@ function createFormValue(
   time: number,
   scheduled_message_id: string = null,
   times: number = null,
-  finish_at: number = null
+  finish_at: number = null,
+  remaining_time: number = null
 ): string {
   let form: FormValue = {
     users,
@@ -309,6 +311,9 @@ function createFormValue(
   }
   if (finish_at) {
     form = { ...form, finish_at };
+  }
+  if (remaining_time) {
+    form = { ...form, remaining_time };
   }
 
   return JSON.stringify(form);
@@ -341,8 +346,9 @@ function createConfirmBlocks(form: FormValue): {}[] {
           type: "mrkdwn",
           text: `:one: Pick users from the list. :white_check_mark:\n${createSelectUserList(
             form.users
-          )}\nselected.\n:two: Select an time :white_check_mark:.\n${form.time
-            } minutes selected.`
+          )}\nselected.\n:two: Select an time :white_check_mark:.\n${
+            form.time
+          } minutes selected.`
         }
       ]
     },
@@ -365,7 +371,7 @@ function createConfirmBlocks(form: FormValue): {}[] {
             type: "plain_text",
             text: "Nomal Start :motorway:"
           },
-          value: createFormValue(form.users, form.time),
+          value: createFormValue(form.users, form.time, null, 0),
           style: "primary",
           action_id: "start"
         },
@@ -434,18 +440,20 @@ const executeButton = (blockActions: BlockActions): {} => {
         return {};
       }
       blocks.pop();
+    case "resume":
     case "recontinue":
     case "change":
     case "start":
       webhook.invoke({ replace_original: "true", blocks });
       const endTime = new Date();
       // Set end time
-      endTime.setMinutes(endTime.getMinutes() + form.time);
-      if (form.times) {
-        form.times++;
+      if (form.remaining_time) {
+        endTime.setTime(endTime.getTime() + form.remaining_time);
       } else {
-        form.times = 1;
+        endTime.setMinutes(endTime.getMinutes() + form.time);
+        form.remaining_time = form.time * 1000 * 60;
       }
+      form.finish_at = endTime.getTime();
       form.scheduled_message_id = client.chatScheduleMessage(
         channel,
         endTime,
@@ -453,25 +461,21 @@ const executeButton = (blockActions: BlockActions): {} => {
         createMobedBlocks(form)
       );
 
-      form.times--;
-
       const ts = client.chatPostMessage(
         channel,
         "",
         null,
         null,
-        createMobbingBlocks(form, endTime)
+        createMobbingBlocks(form)
       );
 
       // Create count down job
-      if (form.time > COUNT_DOWN_NOTIFICATION_TIME) {
-        const countDownTime = new Date(endTime);
-        // Set end time
-        countDownTime.setMinutes(
-          countDownTime.getMinutes() - COUNT_DOWN_NOTIFICATION_TIME
-        );
-        form.finish_at = endTime.getTime();
-
+      const countDownTime = new Date(endTime);
+      // Set end time
+      countDownTime.setMinutes(
+        countDownTime.getMinutes() - COUNT_DOWN_NOTIFICATION_TIME
+      );
+      if (countDownTime.getTime() > Date.now()) {
         DelayedJobBroker.createJob(countDownTime).performLater(countDown, {
           channel,
           ts,
@@ -485,7 +489,7 @@ const executeButton = (blockActions: BlockActions): {} => {
       if (
         !client.chatDeleteScheduleMessage(channel, form.scheduled_message_id)
       ) {
-        if (form.finish_at > new Date().getTime()) {
+        if (form.finish_at > Date.now()) {
           client.chatPostMessage(
             channel,
             "Please wait for a moment to finish."
@@ -493,12 +497,25 @@ const executeButton = (blockActions: BlockActions): {} => {
         }
         return {};
       }
-      if (form.times) {
-        form.times++;
-      } else {
-        form.times = 1;
-      }
       client.chatPostMessage(channel, "", null, null, createMobedBlocks(form));
+
+      return {};
+    case "break":
+      webhook.invoke({ replace_original: "true", blocks });
+      if (
+        !client.chatDeleteScheduleMessage(channel, form.scheduled_message_id)
+      ) {
+        if (form.finish_at > Date.now()) {
+          client.chatPostMessage(
+            channel,
+            "Please wait for a moment to finish."
+          );
+        }
+        return {};
+      }
+      form.remaining_time = form.finish_at - Date.now();
+      form.scheduled_message_id = null;
+      client.chatPostMessage(channel, "", null, null, createRestBlocks(form));
 
       return {};
     case "finish":
@@ -545,7 +562,7 @@ function createStartBlocks(form: FormValue): {}[] {
             type: "plain_text",
             text: "Start Mobbing :motorway:"
           },
-          value: createFormValue(form.users, form.time),
+          value: createFormValue(form.users, form.time, null, 0),
           style: "primary",
           action_id: "start"
         },
@@ -572,7 +589,9 @@ function createStartBlocks(form: FormValue): {}[] {
   ];
 }
 
-function createMobbingBlocks(form: FormValue, endTime: Date): {}[] {
+function createMobbingBlocks(form: FormValue): {}[] {
+  const times = form.times ?? 0;
+
   return [
     {
       type: "context",
@@ -580,11 +599,11 @@ function createMobbingBlocks(form: FormValue, endTime: Date): {}[] {
         {
           type: "mrkdwn",
           text: `${convertTimes(
-            form.times
+            times
           )} mob. :man-woman-boy:\n:oncoming_automobile: Driver(${pickUser(
             form.users,
-            form.times
-          )}), :world_map: Navigater(${pickUser(form.users, form.times + 1)})`
+            times
+          )}), :world_map: Navigater(${pickUser(form.users, times + 1)})`
         }
       ]
     },
@@ -594,10 +613,10 @@ function createMobbingBlocks(form: FormValue, endTime: Date): {}[] {
         {
           type: "mrkdwn",
           text: `:clock9: *${Utilities.formatDate(
-            endTime,
+            new Date(form.finish_at),
             "JST",
             "HH:mm:ss"
-          )}* (_${form.time} minutes later_)`
+          )}* (_${convertRemingTime(form.remaining_time)} later_)`
         }
       ]
     },
@@ -606,7 +625,7 @@ function createMobbingBlocks(form: FormValue, endTime: Date): {}[] {
 }
 
 function createTurnEndActionBlock(form: FormValue): {} {
-  return {
+  const blocks: { type: string; elements: object[] } = {
     type: "actions",
     elements: [
       {
@@ -627,6 +646,26 @@ function createTurnEndActionBlock(form: FormValue): {} {
       }
     ]
   };
+
+  if (form.finish_at > Date.now()) {
+    blocks.elements.push({
+      type: "button",
+      text: {
+        type: "plain_text",
+        text: "Take a break :coffee:"
+      },
+      value: createFormValue(
+        form.users,
+        form.time,
+        form.scheduled_message_id,
+        form.times,
+        form.finish_at
+      ),
+      action_id: "break"
+    });
+  }
+
+  return blocks;
 }
 
 function convertTimes(times?: number): string {
@@ -643,7 +682,10 @@ function convertTimes(times?: number): string {
 }
 
 function createMobedBlocks(form: FormValue): {}[] {
-  const emoji = form.times % 2 === 0 ? ":+1:" : ":clap:";
+  let times = form.times ?? 0;
+  // next times
+  times++;
+  const emoji = times % 2 === 0 ? ":+1:" : ":clap:";
 
   return [
     {
@@ -653,7 +695,7 @@ function createMobedBlocks(form: FormValue): {}[] {
           type: "mrkdwn",
           text: `:alarm_clock: Thank you ${pickUser(
             form.users,
-            form.times - 1
+            times - 1
           )}${emoji}`
         }
       ]
@@ -664,11 +706,11 @@ function createMobedBlocks(form: FormValue): {}[] {
         {
           type: "mrkdwn",
           text: `${convertTimes(
-            form.times
+            times
           )} mob. :man-woman-boy:\n:oncoming_automobile: Driver(${pickUser(
             form.users,
-            form.times
-          )}), :world_map: Navigator(${pickUser(form.users, form.times + 1)})`
+            times
+          )}), :world_map: Navigator(${pickUser(form.users, times + 1)})`
         }
       ]
     },
@@ -681,7 +723,7 @@ function createMobedBlocks(form: FormValue): {}[] {
             type: "plain_text",
             text: "Continue :raised_hands:"
           },
-          value: createFormValue(form.users, form.time, null, form.times),
+          value: createFormValue(form.users, form.time, null, times),
           style: "primary",
           action_id: "continue"
         },
@@ -691,7 +733,7 @@ function createMobedBlocks(form: FormValue): {}[] {
             type: "plain_text",
             text: "Finish :checkered_flag:"
           },
-          value: createFormValue(form.users, form.time, null, form.times),
+          value: createFormValue(form.users, form.time, null, times),
           style: "danger",
           confirm: {
             title: {
@@ -716,6 +758,73 @@ function createMobedBlocks(form: FormValue): {}[] {
       ]
     }
   ];
+}
+
+function createRestBlocks(form: FormValue): {}[] {
+  const times = form.times ?? 0;
+
+  return [
+    {
+      type: "context",
+      elements: [
+        {
+          type: "mrkdwn",
+          text: "Let's make a pit stop! :fuelpump:"
+        }
+      ]
+    },
+    {
+      type: "context",
+      elements: [
+        {
+          type: "mrkdwn",
+          text: `${convertTimes(
+            times
+          )} mob breaking. :man-woman-boy:\n:oncoming_automobile: Driver(${pickUser(
+            form.users,
+            times
+          )}), :world_map: Navigator(${pickUser(
+            form.users,
+            times + 1
+          )})\nActive time remaining is ${convertRemingTime(
+            form.remaining_time
+          )}`
+        }
+      ]
+    },
+    {
+      type: "actions",
+      elements: [
+        {
+          type: "button",
+          text: {
+            type: "plain_text",
+            text: "Get back to drive :racing_car:"
+          },
+          value: createFormValue(
+            form.users,
+            form.time,
+            null,
+            times,
+            form.finish_at,
+            form.remaining_time
+          ),
+          style: "primary",
+          action_id: "resume"
+        }
+      ]
+    }
+  ];
+}
+
+function convertRemingTime(remaining_time: number): string {
+  const seconds = Math.floor(remaining_time / 1000);
+  const minutes = Math.floor(seconds / 60);
+  if (seconds - minutes * 60 === 0) {
+    return `${minutes} minutes`;
+  } else {
+    return `${minutes} minutes, ${seconds - minutes * 60} seconds`;
+  }
 }
 
 function createFinishMessage(form: FormValue): string {
