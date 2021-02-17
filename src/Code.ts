@@ -867,6 +867,8 @@ const countDown = (): void => {
 };
 
 function createCountDownBlocks(form: FormValue): {}[] {
+  const times = form.times ?? 0;
+
   return [
     {
       type: "context",
@@ -875,9 +877,9 @@ function createCountDownBlocks(form: FormValue): {}[] {
           type: "mrkdwn",
           text: `:hourglass_flowing_sand: Hey, ${pickUser(
             form.users,
-            form.times
+            times
           )}. ${convertTimes(
-            form.times
+            times
           )} mob will finish in ${COUNT_DOWN_NOTIFICATION_TIME} minutes.`
         }
       ]
