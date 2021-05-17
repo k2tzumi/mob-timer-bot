@@ -951,20 +951,30 @@ function changeOrder(
   actionUser: { id: string; name: string }
 ): string[] {
   const users = [...form.users];
-  const swapIndex = users.indexOf(actionUser.id);
-  const swapUser = actionUser.id;
+  const swapIndex = getUserIndex(form , actionUser);
 
   const currentIndex = form.times % users.length;
   const currentUser = users[currentIndex];
 
   if (swapIndex === -1) {
-    users.splice(currentIndex, 0, swapUser);
+    users.splice(currentIndex, 0, actionUser.id);
   } else {
-    users[currentIndex] = swapUser;
+    users[currentIndex] = users[swapIndex];
     users[swapIndex] = currentUser;
   }
 
   return users;
+}
+
+function getUserIndex(form: FormValue, actionUser: { id: string; name: string }): number {
+  const users = [...form.users];
+  const swapIndex = users.indexOf(actionUser.id);
+
+  if (swapIndex === -1) {
+    return users.indexOf(actionUser.name);
+  }
+
+  return swapIndex;
 }
 
 const shuffle = ([...array]) => {
