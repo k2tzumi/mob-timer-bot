@@ -457,7 +457,7 @@ const executeButton = (blockActions: BlockActions): {} => {
       form.scheduled_message_id = client.chatScheduleMessage(
         channel,
         endTime,
-        null,
+        ".",
         createMobedBlocks(form)
       );
 
@@ -951,7 +951,7 @@ function changeOrder(
   actionUser: { id: string; name: string }
 ): string[] {
   const users = [...form.users];
-  const swapIndex = getUserIndex(form , actionUser);
+  const swapIndex = getUserIndex(form, actionUser);
 
   const currentIndex = form.times % users.length;
   const currentUser = users[currentIndex];
@@ -966,7 +966,10 @@ function changeOrder(
   return users;
 }
 
-function getUserIndex(form: FormValue, actionUser: { id: string; name: string }): number {
+function getUserIndex(
+  form: FormValue,
+  actionUser: { id: string; name: string }
+): number {
   const users = [...form.users];
   const swapIndex = users.indexOf(actionUser.id);
 
