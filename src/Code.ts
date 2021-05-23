@@ -409,18 +409,25 @@ const executeButton = (blockActions: BlockActions): {} => {
     case "cancel":
       response.delete_original = "true";
       break;
-    case "shuffle":
+    case "shuffle": {
       webhook.invoke({ replace_original: "true", blocks });
 
-      client.chatPostMessage(channel, "", null, null, createStartBlocks(form));
+      client.chatPostMessage(
+        channel,
+        null,
+        null,
+        null,
+        createStartBlocks(form)
+      );
       return {};
+    }
     case "reshuffle":
       webhook.invoke({
         replace_original: "true",
         blocks: createStartBlocks(form)
       });
       return {};
-    case "continue":
+    case "continue": {
       const currentUser = form.users[form.times % form.users.length];
       // other user takes an action
       if (
@@ -431,7 +438,7 @@ const executeButton = (blockActions: BlockActions): {} => {
       ) {
         client.chatPostMessage(
           channel,
-          "",
+          null,
           null,
           null,
           createConfirmChangeBlocks(form, blockActions.user)
@@ -440,10 +447,11 @@ const executeButton = (blockActions: BlockActions): {} => {
         return {};
       }
       blocks.pop();
+    }
     case "resume":
     case "recontinue":
     case "change":
-    case "start":
+    case "start": {
       webhook.invoke({ replace_original: "true", blocks });
       const endTime = new Date();
       // Set end time
@@ -454,16 +462,17 @@ const executeButton = (blockActions: BlockActions): {} => {
         form.remaining_time = form.time * 1000 * 60;
       }
       form.finish_at = endTime.getTime();
+
       form.scheduled_message_id = client.chatScheduleMessage(
         channel,
         endTime,
-        ".",
+        null,
         createMobedBlocks(form)
       );
 
       const ts = client.chatPostMessage(
         channel,
-        "",
+        null,
         null,
         null,
         createMobbingBlocks(form)
@@ -484,7 +493,8 @@ const executeButton = (blockActions: BlockActions): {} => {
       }
 
       return {};
-    case "turn_end":
+    }
+    case "turn_end": {
       webhook.invoke({ replace_original: "true", blocks });
       if (
         !client.chatDeleteScheduleMessage(channel, form.scheduled_message_id)
@@ -497,10 +507,18 @@ const executeButton = (blockActions: BlockActions): {} => {
         }
         return {};
       }
-      client.chatPostMessage(channel, "", null, null, createMobedBlocks(form));
+      const mobedBlocks = createMobedBlocks(form);
+      client.chatPostMessage(
+        channel,
+        null,
+        null,
+        null,
+        createMobedBlocks(form)
+      );
 
       return {};
-    case "break":
+    }
+    case "break": {
       webhook.invoke({ replace_original: "true", blocks });
       if (
         !client.chatDeleteScheduleMessage(channel, form.scheduled_message_id)
@@ -515,9 +533,10 @@ const executeButton = (blockActions: BlockActions): {} => {
       }
       form.remaining_time = form.finish_at - Date.now();
       form.scheduled_message_id = null;
-      client.chatPostMessage(channel, "", null, null, createRestBlocks(form));
+      client.chatPostMessage(channel, null, null, null, createRestBlocks(form));
 
       return {};
+    }
     case "finish":
       webhook.invoke({ replace_original: "true", blocks });
 

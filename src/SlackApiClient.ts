@@ -2,6 +2,7 @@ import { NetworkAccessError } from "./NetworkAccessError";
 
 type URLFetchRequestOptions = GoogleAppsScript.URL_Fetch.URLFetchRequestOptions;
 type HttpMethod = GoogleAppsScript.URL_Fetch.HttpMethod;
+type HTTPResponse = GoogleAppsScript.URL_Fetch.HTTPResponse;
 
 interface Response {
   ok: boolean;
@@ -16,10 +17,41 @@ interface Message {
   blocks?: Block[];
 }
 
+interface TextCompositionObject {
+  type: string;
+  text: string;
+  emoji?: boolean;
+  verbatim?: boolean;
+}
+
 interface Block {
   type: string;
-  block_id: string;
+  block_id?: string;
+}
+
+// type=divider
+type DividerBlock = Block;
+
+interface ContextBlock extends Block {
+  // type=context
+  elements: (TextCompositionObject | {})[];
+}
+
+interface ActionsBlock extends Block {
+  // type=actions
   elements: {}[];
+}
+
+interface HeaderBlock extends Block {
+  // type=header
+  text: TextCompositionObject;
+}
+
+interface SectionBlock extends Block {
+  // type=section
+  text: TextCompositionObject;
+  fields: {}[];
+  accessory: {};
 }
 
 interface ChatScheduleMessageResponse extends Response {
@@ -159,8 +191,7 @@ class SlackApiClient {
   ): string {
     const endPoint = SlackApiClient.BASE_PATH + "chat.postMessage";
     let payload: {} = {
-      channel,
-      text
+      channel
     };
     if (thread_ts) {
       payload = { ...payload, thread_ts };
@@ -169,8 +200,12 @@ class SlackApiClient {
       payload = { ...payload, attachments };
     }
     if (blocks) {
+      if (!text) {
+        text = this.convertBlock2Text(blocks);
+      }
       payload = { ...payload, blocks };
     }
+    payload = { ...payload, text };
 
     const response = this.invokeAPI(
       endPoint,
@@ -199,12 +234,13 @@ class SlackApiClient {
       channel,
       post_at: Math.ceil(post_at.getTime() / 1000)
     };
-    if (text) {
-      payload = { ...payload, text };
-    }
     if (blocks) {
-      payload = { ...payload, blocks };
+      if (!text) {
+        text = this.convertBlock2Text(blocks);
+      }
+      payload = { ...payload, blocks, text };
     }
+    payload = { ...payload, text };
 
     const response = this.invokeAPI(
       endPoint,
@@ -297,12 +333,13 @@ class SlackApiClient {
       channel,
       ts
     };
-    if (text) {
-      payload = { ...payload, text };
-    }
     if (blocks) {
+      if (!text) {
+        text = this.convertBlock2Text(blocks);
+      }
       payload = { ...payload, blocks };
     }
+    payload = { ...payload, text };
 
     const response = this.invokeAPI(endPoint, payload) as Response;
 
@@ -313,6 +350,41 @@ class SlackApiClient {
         )}, payload: ${JSON.stringify(payload)}`
       );
     }
+  }
+
+  private convertBlock2Text(blocks: (Block | {})[]): string {
+    const textArray = [];
+    blocks.forEach(block => {
+      if (block.hasOwnProperty("type")) {
+        const obj = block as Block;
+        switch (obj.type) {
+          case "context": {
+            if (block.hasOwnProperty("elements")) {
+              const contextBlock = block as ContextBlock;
+              contextBlock.elements.forEach(element => {
+                if (element.hasOwnProperty("text")) {
+                  const textCompositionObject = element as TextCompositionObject;
+
+                  textArray.push(textCompositionObject.text);
+                }
+              });
+            }
+            break;
+          }
+          case "header": {
+            const headerBlock = block as HeaderBlock;
+            textArray.push(headerBlock.text.text);
+            break;
+          }
+          case "section": {
+            const sectionBlock = block as SectionBlock;
+            textArray.push(sectionBlock.text.text);
+            break;
+          }
+        }
+      }
+    });
+    return textArray.join("\n");
   }
 
   private postRequestHeader() {
@@ -356,7 +428,7 @@ class SlackApiClient {
    * @throws NetworkAccessError
    */
   private invokeAPI(endPoint: string, payload: {}): Response {
-    let response;
+    let response: HTTPResponse;
 
     try {
       switch (this.preferredHttpMethod(endPoint)) {
