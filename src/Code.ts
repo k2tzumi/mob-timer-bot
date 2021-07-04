@@ -5,7 +5,6 @@ import { Slack } from "./slack/types/index.d";
 import { SlackWebhooks } from "./SlackWebhooks";
 import { SlackApiClient } from "./SlackApiClient";
 import { SlashCommandFunctionResponse } from "./SlashCommandHandler";
-import { JobBroker } from "apps-script-jobqueue";
 
 type TextOutput = GoogleAppsScript.Content.TextOutput;
 type HtmlOutput = GoogleAppsScript.HTML.HtmlOutput;
