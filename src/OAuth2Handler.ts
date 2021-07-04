@@ -1,6 +1,4 @@
-import * as OAuth2 from "apps-script-oauth2/src/OAuth2";
-import {} from "apps-script-oauth2/src/Service";
-
+type OAuth2Service = GoogleAppsScriptOAuth2.OAuth2Service;
 type Properties = GoogleAppsScript.Properties.Properties;
 type HtmlOutput = GoogleAppsScript.HTML.HtmlOutput;
 type URLFetchRequestOptions = GoogleAppsScript.URL_Fetch.URLFetchRequestOptions;
@@ -43,13 +41,7 @@ interface IncomingWebhook {
   url: string;
 }
 
-interface TokenPayload {
-  code: string;
-  client_id: string;
-  client_secret: string;
-  redirect_uri: string;
-  grant_type: string;
-}
+type TokenPayload = GoogleAppsScriptOAuth2.TokenPayload;
 
 class OAuth2Handler {
   public get token(): string {
@@ -118,7 +110,7 @@ class OAuth2Handler {
   public static readonly SCOPE =
     "commands,chat:write,channels:history,groups:history,mpim:history,im:history";
 
-  private service: Service_;
+  private service: OAuth2Service;
 
   private oAuthAccess: OauthAccess;
 
@@ -131,6 +123,7 @@ class OAuth2Handler {
     this.service = OAuth2.createService("slack")
       .setAuthorizationBaseUrl("https://slack.com/oauth/v2/authorize")
       .setTokenUrl("https://api.slack.com/methods/oauth.v2.access")
+      // .setTokenFormat(GoogleAppsScriptOAuth2.TokenFormat.FORM_URL_ENCODED)
       .setTokenFormat("application/x-www-form-urlencoded")
       .setClientId(this.clientId)
       .setClientSecret(this.clientSecret)
