@@ -31,7 +31,8 @@ REQUIREMENTS
 `npm install -g @google/clasp`
 - `make`
 - GAS Library
-  - OAuth2
+  - [OAuth2](https://github.com/googleworkspace/apps-script-oauth2)
+  - [JobBroker](https://github.com/k2tzumi/apps-script-jobqueue)
 
 USAGE
 --------------------
