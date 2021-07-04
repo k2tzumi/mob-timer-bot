@@ -1,15 +1,16 @@
 import { SlackHandler } from "./SlackHandler";
 import { DuplicateEventError } from "./CallbackEventHandler";
-import { JobBroker } from "./JobBroker";
 import { OAuth2Handler } from "./OAuth2Handler";
 import { Slack } from "./slack/types/index.d";
 import { SlackWebhooks } from "./SlackWebhooks";
 import { SlackApiClient } from "./SlackApiClient";
 import { SlashCommandFunctionResponse } from "./SlashCommandHandler";
-import { DelayedJobBroker } from "./DelayedJobBroker";
+import { JobBroker } from "apps-script-jobqueue";
 
 type TextOutput = GoogleAppsScript.Content.TextOutput;
 type HtmlOutput = GoogleAppsScript.HTML.HtmlOutput;
+type DoPost = GoogleAppsScript.Events.DoPost;
+type DoGet = GoogleAppsScript.Events.DoGet;
 type Commands = Slack.SlashCommand.Commands;
 type MultiUsersSelectAction = Slack.Interactivity.MultiUsersSelectAction;
 type BlockActions = Slack.Interactivity.BlockActions;
@@ -40,11 +41,11 @@ function initializeOAuth2Handler(): void {
 /**
  * Authorizes and makes a request to the Slack API.
  */
-function doGet(request): HtmlOutput {
+function doGet(request: DoGet): HtmlOutput {
   initializeOAuth2Handler();
 
   // Clear authentication by accessing with the get parameter `?logout=true`
-  if (request.parameter.logout) {
+  if (request.parameter.hasOwnProperty("logout")) {
     handler.clearService();
     const template = HtmlService.createTemplate(
       'Logout<br /><a href="<?= requestUrl ?>" target="_blank">refresh</a>.'
@@ -66,21 +67,22 @@ function doGet(request): HtmlOutput {
 }
 
 const asyncLogging = (): void => {
-  const jobBroker: JobBroker = new JobBroker();
-  jobBroker.consumeJob((parameter: {}) => {
+  JobBroker.consumeAsyncJob((parameter: Record<string, any>) => {
     console.info(JSON.stringify(parameter));
-  });
+  }, "asyncLogging");
 };
 
 const VERIFICATION_TOKEN: string = properties.getProperty("VERIFICATION_TOKEN");
-const COMMAND = "/mob";
 
-function doPost(e): TextOutput {
+function doPost(e: DoPost): TextOutput {
   initializeOAuth2Handler();
 
   const slackHandler = new SlackHandler(VERIFICATION_TOKEN);
 
-  slackHandler.addCommandListener(COMMAND, executeSlashCommand);
+  slackHandler.addCommandListener(
+    e.parameter.command ?? "command",
+    executeSlashCommand
+  );
   slackHandler.addInteractivityListener(
     "multi_users_select",
     executeMultiUserSelect
@@ -98,7 +100,7 @@ function doPost(e): TextOutput {
     if (exception instanceof DuplicateEventError) {
       return ContentService.createTextOutput();
     } else {
-      new JobBroker().enqueue(asyncLogging, {
+      JobBroker.enqueueAsyncJob(asyncLogging, {
         message: exception.message,
         stack: exception.stack
       });
@@ -131,7 +133,7 @@ const executeSlashCommand = (
       !Object.keys(form.users).length
     ) {
       response.response_type = "ephemeral";
-      response.text = `*Usage*\n* ${COMMAND}\n* ${COMMAND} [n minitues][@user1 @user2]\n* ${COMMAND} help`;
+      response.text = `*Usage*\n* ${commands.command}\n* ${commands.command} [n minitues][@user1 @user2]\n* ${commands.command} help`;
     } else {
       response.response_type = "in_channel";
       response.blocks = createConfirmBlocks(form);
@@ -485,7 +487,7 @@ const executeButton = (blockActions: BlockActions): {} => {
         countDownTime.getMinutes() - COUNT_DOWN_NOTIFICATION_TIME
       );
       if (countDownTime.getTime() > Date.now()) {
-        DelayedJobBroker.createJob(countDownTime).performLater(countDown, {
+        JobBroker.createDelaydJob(countDownTime).performLater(countDown, {
           channel,
           ts,
           form
@@ -859,8 +861,12 @@ function createFinishMessage(form: FormValue): string {
 
 const countDown = (): void => {
   initializeOAuth2Handler();
-  DelayedJobBroker.perform(
-    (parameter: { channel: string; ts: string; form: FormValue }) => {
+  JobBroker.perform(
+    (
+      parameter:
+        | { channel: string; ts: string; form: FormValue }
+        | Record<string, any>
+    ) => {
       const { channel, ts, form } = parameter;
 
       const client = new SlackApiClient(handler.token);
@@ -881,7 +887,8 @@ const countDown = (): void => {
           createCountDownBlocks(form)
         );
       }
-    }
+    },
+    "countDown"
   );
 };
 
