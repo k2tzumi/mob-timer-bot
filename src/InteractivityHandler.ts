@@ -4,7 +4,8 @@ import { Slack } from "./slack/types/index.d";
 type TextOutput = GoogleAppsScript.Content.TextOutput;
 type Interaction = Slack.Interactivity.Interaction;
 type BlockActions = Slack.Interactivity.BlockActions;
-type InteractivityFunction = (interaction: Interaction) => {} | void;
+type BlockActionsFunction = (blockActions: BlockActions) => {};
+type InteractivityFunction = ((interaction: Interaction) => {} | void) | BlockActionsFunction;
 
 class InteractivityHandler extends SlackBaseHandler<InteractivityFunction> {
   public handle(e): { performed: boolean; output: TextOutput | null } {
@@ -76,4 +77,4 @@ class InteractivityHandler extends SlackBaseHandler<InteractivityFunction> {
   }
 }
 
-export { InteractivityHandler, InteractivityFunction };
+export { InteractivityHandler, InteractivityFunction, BlockActionsFunction };

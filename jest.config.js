@@ -10,6 +10,7 @@ module.exports = {
         CacheService: {},
         ContentService: {},
         ScriptApp: {},
+        JobBroker: {},
     },
     moduleDirectories: [
         'node_modules',
