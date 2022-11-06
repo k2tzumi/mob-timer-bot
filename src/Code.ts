@@ -5,6 +5,7 @@ import { Slack } from "./slack/types/index.d";
 import { SlackWebhooks } from "./SlackWebhooks";
 import { SlackApiClient } from "./SlackApiClient";
 import { SlashCommandFunctionResponse } from "./SlashCommandHandler";
+import "apps-script-jobqueue";
 
 type TextOutput = GoogleAppsScript.Content.TextOutput;
 type HtmlOutput = GoogleAppsScript.HTML.HtmlOutput;
@@ -19,8 +20,8 @@ type InteractionResponse = Slack.Interactivity.InteractionResponse;
 
 const properties = PropertiesService.getScriptProperties();
 
-const CLIENT_ID: string = properties.getProperty("CLIENT_ID");
-const CLIENT_SECRET: string = properties.getProperty("CLIENT_SECRET");
+const CLIENT_ID: string = properties.getProperty("CLIENT_ID") || "";
+const CLIENT_SECRET: string = properties.getProperty("CLIENT_SECRET") || "";
 let handler: OAuth2Handler;
 
 const handleCallback = (request): HtmlOutput => {
@@ -101,7 +102,7 @@ function doPost(e: DoPost): TextOutput {
     } else {
       JobBroker.enqueueAsyncJob(asyncLogging, {
         message: exception.message,
-        stack: exception.stack
+        stack: exception.stack,
       });
       throw exception;
     }
@@ -113,7 +114,8 @@ function doPost(e: DoPost): TextOutput {
 const executeSlashCommand = (
   commands: Commands
 ): SlashCommandFunctionResponse | null => {
-  const response: SlashCommandFunctionResponse = {} as SlashCommandFunctionResponse;
+  const response: SlashCommandFunctionResponse =
+    {} as SlashCommandFunctionResponse;
 
   if (commands.text) {
     const parameters = commands.text.split(" ");
@@ -121,8 +123,8 @@ const executeSlashCommand = (
     const form: FormValue = {
       time: parseInt(parameters.shift(), 10),
       users: parameters
-        .filter(user => user.match(/^@(.*)$/))
-        .map(user => user.replace(/^@(.*)$/, "$1"))
+        .filter((user) => user.match(/^@(.*)$/))
+        .map((user) => user.replace(/^@(.*)$/, "$1")),
     };
 
     if (
@@ -151,17 +153,17 @@ function createSelectUserBlocks(user_id: string): {}[] {
       type: "section",
       text: {
         type: "mrkdwn",
-        text: ":one: Pick users from the list."
+        text: ":one: Pick users from the list.",
       },
       accessory: {
         action_id: "members",
         type: "multi_users_select",
         placeholder: {
           type: "plain_text",
-          text: "Select users"
+          text: "Select users",
         },
-        initial_users: [user_id]
-      }
+        initial_users: [user_id],
+      },
     },
     {
       type: "actions",
@@ -170,13 +172,13 @@ function createSelectUserBlocks(user_id: string): {}[] {
           type: "button",
           text: {
             type: "plain_text",
-            text: "Cancel"
+            text: "Cancel",
           },
           value: '{ "cancel": true }',
-          action_id: "cancel"
-        }
-      ]
-    }
+          action_id: "cancel",
+        },
+      ],
+    },
   ];
 }
 
@@ -186,7 +188,7 @@ const executeMultiUserSelect = (blockActions: BlockActions): {} => {
   const webhook = new SlackWebhooks(blockActions.response_url);
   const response: InteractionResponse = {
     replace_original: "true",
-    blocks: createSelectTimerBlocks(action.selected_users)
+    blocks: createSelectTimerBlocks(action.selected_users),
   };
   if (!webhook.invoke(response)) {
     throw new Error(
@@ -206,61 +208,61 @@ function createSelectTimerBlocks(selected_users: string[]): {}[] {
           type: "mrkdwn",
           text: `:one: Pick users from the list. :white_check_mark:\n${createSelectUserList(
             selected_users
-          )}\nselected.`
-        }
-      ]
+          )}\nselected.`,
+        },
+      ],
     },
     {
       type: "section",
       text: {
         type: "mrkdwn",
-        text: `:two: Select an time.`
+        text: `:two: Select an time.`,
       },
       accessory: {
         action_id: "time",
         type: "static_select",
         placeholder: {
           type: "plain_text",
-          text: "Select an time"
+          text: "Select an time",
         },
         options: [
           {
             text: {
               type: "plain_text",
-              text: "10 minutes"
+              text: "10 minutes",
             },
-            value: createFormValue(selected_users, 10)
+            value: createFormValue(selected_users, 10),
           },
           {
             text: {
               type: "plain_text",
-              text: "15 minutes"
+              text: "15 minutes",
             },
-            value: createFormValue(selected_users, 15)
+            value: createFormValue(selected_users, 15),
           },
           {
             text: {
               type: "plain_text",
-              text: "20 minutes"
+              text: "20 minutes",
             },
-            value: createFormValue(selected_users, 20)
+            value: createFormValue(selected_users, 20),
           },
           {
             text: {
               type: "plain_text",
-              text: "25 minutes"
+              text: "25 minutes",
             },
-            value: createFormValue(selected_users, 25)
+            value: createFormValue(selected_users, 25),
           },
           {
             text: {
               type: "plain_text",
-              text: "30 minutes"
+              text: "30 minutes",
             },
-            value: createFormValue(selected_users, 30)
-          }
-        ]
-      }
+            value: createFormValue(selected_users, 30),
+          },
+        ],
+      },
     },
     {
       type: "actions",
@@ -269,18 +271,18 @@ function createSelectTimerBlocks(selected_users: string[]): {}[] {
           type: "button",
           text: {
             type: "plain_text",
-            text: "Cancel"
+            text: "Cancel",
           },
           value: '{ "cancel": true }',
-          action_id: "cancel"
-        }
-      ]
-    }
+          action_id: "cancel",
+        },
+      ],
+    },
   ];
 }
 
 function createSelectUserList(selected_users: string[]): string {
-  return selected_users.map<string>(user => `<@${user}>`).join(", ");
+  return selected_users.map<string>((user) => `<@${user}>`).join(", ");
 }
 
 interface FormValue {
@@ -302,7 +304,7 @@ function createFormValue(
 ): string {
   let form: FormValue = {
     users,
-    time
+    time,
   };
   if (scheduled_message_id) {
     form = { ...form, scheduled_message_id };
@@ -326,7 +328,7 @@ const executeStaticSelect = (blockActions: BlockActions): {} => {
   const webhook = new SlackWebhooks(blockActions.response_url);
   const response: InteractionResponse = {
     replace_original: "true",
-    blocks: createConfirmBlocks(JSON.parse(action.selected_option.value))
+    blocks: createConfirmBlocks(JSON.parse(action.selected_option.value)),
   };
 
   if (!webhook.invoke(response)) {
@@ -349,9 +351,9 @@ function createConfirmBlocks(form: FormValue): {}[] {
             form.users
           )}\nselected.\n:two: Select an time :white_check_mark:.\n${
             form.time
-          } minutes selected.`
-        }
-      ]
+          } minutes selected.`,
+        },
+      ],
     },
     {
       type: "actions",
@@ -360,33 +362,33 @@ function createConfirmBlocks(form: FormValue): {}[] {
           type: "button",
           text: {
             type: "plain_text",
-            text: "Shuffle Start :game_die:"
+            text: "Shuffle Start :game_die:",
           },
           value: createFormValue(form.users, form.time),
           style: "primary",
-          action_id: "shuffle"
+          action_id: "shuffle",
         },
         {
           type: "button",
           text: {
             type: "plain_text",
-            text: "Nomal Start :motorway:"
+            text: "Nomal Start :motorway:",
           },
           value: createFormValue(form.users, form.time, null, 0),
           style: "primary",
-          action_id: "start"
+          action_id: "start",
         },
         {
           type: "button",
           text: {
             type: "plain_text",
-            text: "Cancel"
+            text: "Cancel",
           },
           value: '{ "cancel": true }',
-          action_id: "cancel"
-        }
-      ]
-    }
+          action_id: "cancel",
+        },
+      ],
+    },
   ];
 }
 
@@ -425,7 +427,7 @@ const executeButton = (blockActions: BlockActions): {} => {
     case "reshuffle":
       webhook.invoke({
         replace_original: "true",
-        blocks: createStartBlocks(form)
+        blocks: createStartBlocks(form),
       });
       return {};
     case "continue": {
@@ -489,7 +491,7 @@ const executeButton = (blockActions: BlockActions): {} => {
         JobBroker.createDelaydJob(countDownTime).performLater(countDown, {
           channel,
           ts,
-          form
+          form,
         });
       }
 
@@ -569,9 +571,9 @@ function createStartBlocks(form: FormValue): {}[] {
       elements: [
         {
           type: "mrkdwn",
-          text: `:dart: Order\n${userOrder}\n:timer_clock: ${form.time} minutes`
-        }
-      ]
+          text: `:dart: Order\n${userOrder}\n:timer_clock: ${form.time} minutes`,
+        },
+      ],
     },
     {
       type: "actions",
@@ -580,32 +582,32 @@ function createStartBlocks(form: FormValue): {}[] {
           type: "button",
           text: {
             type: "plain_text",
-            text: "Start Mobbing :motorway:"
+            text: "Start Mobbing :motorway:",
           },
           value: createFormValue(form.users, form.time, null, 0),
           style: "primary",
-          action_id: "start"
+          action_id: "start",
         },
         {
           type: "button",
           text: {
             type: "plain_text",
-            text: "One more :game_die:"
+            text: "One more :game_die:",
           },
           value: createFormValue(form.users, form.time),
-          action_id: "reshuffle"
+          action_id: "reshuffle",
         },
         {
           type: "button",
           text: {
             type: "plain_text",
-            text: "Cancel"
+            text: "Cancel",
           },
           value: '{ "cancel": true }',
-          action_id: "cancel"
-        }
-      ]
-    }
+          action_id: "cancel",
+        },
+      ],
+    },
   ];
 }
 
@@ -623,9 +625,9 @@ function createMobbingBlocks(form: FormValue): {}[] {
           )} mob. :man-woman-boy:\n:oncoming_automobile: Driver(${pickUser(
             form.users,
             times
-          )}), :world_map: Navigater(${pickUser(form.users, times + 1)})`
-        }
-      ]
+          )}), :world_map: Navigater(${pickUser(form.users, times + 1)})`,
+        },
+      ],
     },
     {
       type: "context",
@@ -636,11 +638,11 @@ function createMobbingBlocks(form: FormValue): {}[] {
             new Date(form.finish_at),
             "JST",
             "HH:mm:ss"
-          )}* (_${convertRemingTime(form.remaining_time)} later_)`
-        }
-      ]
+          )}* (_${convertRemingTime(form.remaining_time)} later_)`,
+        },
+      ],
     },
-    createTurnEndActionBlock(form)
+    createTurnEndActionBlock(form),
   ];
 }
 
@@ -652,7 +654,7 @@ function createTurnEndActionBlock(form: FormValue): {} {
         type: "button",
         text: {
           type: "plain_text",
-          text: "Turn End :black_joker:"
+          text: "Turn End :black_joker:",
         },
         value: createFormValue(
           form.users,
@@ -662,9 +664,9 @@ function createTurnEndActionBlock(form: FormValue): {} {
           form.finish_at
         ),
         style: "primary",
-        action_id: "turn_end"
-      }
-    ]
+        action_id: "turn_end",
+      },
+    ],
   };
 
   if (form.finish_at > Date.now()) {
@@ -672,7 +674,7 @@ function createTurnEndActionBlock(form: FormValue): {} {
       type: "button",
       text: {
         type: "plain_text",
-        text: "Take a break :coffee:"
+        text: "Take a break :coffee:",
       },
       value: createFormValue(
         form.users,
@@ -681,7 +683,7 @@ function createTurnEndActionBlock(form: FormValue): {} {
         form.times,
         form.finish_at
       ),
-      action_id: "break"
+      action_id: "break",
     });
   }
 
@@ -716,9 +718,9 @@ function createMobedBlocks(form: FormValue): {}[] {
           text: `:alarm_clock: Thank you ${pickUser(
             form.users,
             times - 1
-          )}${emoji}`
-        }
-      ]
+          )}${emoji}`,
+        },
+      ],
     },
     {
       type: "context",
@@ -730,9 +732,9 @@ function createMobedBlocks(form: FormValue): {}[] {
           )} mob. :man-woman-boy:\n:oncoming_automobile: Driver(${pickUser(
             form.users,
             times
-          )}), :world_map: Navigator(${pickUser(form.users, times + 1)})`
-        }
-      ]
+          )}), :world_map: Navigator(${pickUser(form.users, times + 1)})`,
+        },
+      ],
     },
     {
       type: "actions",
@@ -741,42 +743,42 @@ function createMobedBlocks(form: FormValue): {}[] {
           type: "button",
           text: {
             type: "plain_text",
-            text: "Continue :raised_hands:"
+            text: "Continue :raised_hands:",
           },
           value: createFormValue(form.users, form.time, null, times),
           style: "primary",
-          action_id: "continue"
+          action_id: "continue",
         },
         {
           type: "button",
           text: {
             type: "plain_text",
-            text: "Finish :checkered_flag:"
+            text: "Finish :checkered_flag:",
           },
           value: createFormValue(form.users, form.time, null, times),
           style: "danger",
           confirm: {
             title: {
               type: "plain_text",
-              text: "Are you sure?"
+              text: "Are you sure?",
             },
             text: {
               type: "mrkdwn",
-              text: "Do you want to exit mob?"
+              text: "Do you want to exit mob?",
             },
             confirm: {
               type: "plain_text",
-              text: "Do Finish"
+              text: "Do Finish",
             },
             deny: {
               type: "plain_text",
-              text: "Go back to mob"
-            }
+              text: "Go back to mob",
+            },
           },
-          action_id: "finish"
-        }
-      ]
-    }
+          action_id: "finish",
+        },
+      ],
+    },
   ];
 }
 
@@ -789,9 +791,9 @@ function createRestBlocks(form: FormValue): {}[] {
       elements: [
         {
           type: "mrkdwn",
-          text: "Let's make a pit stop! :fuelpump:"
-        }
-      ]
+          text: "Let's make a pit stop! :fuelpump:",
+        },
+      ],
     },
     {
       type: "context",
@@ -808,9 +810,9 @@ function createRestBlocks(form: FormValue): {}[] {
             times + 1
           )})\nActive time remaining is ${convertRemingTime(
             form.remaining_time
-          )}`
-        }
-      ]
+          )}`,
+        },
+      ],
     },
     {
       type: "actions",
@@ -819,7 +821,7 @@ function createRestBlocks(form: FormValue): {}[] {
           type: "button",
           text: {
             type: "plain_text",
-            text: "Get back to drive :racing_car:"
+            text: "Get back to drive :racing_car:",
           },
           value: createFormValue(
             form.users,
@@ -830,10 +832,10 @@ function createRestBlocks(form: FormValue): {}[] {
             form.remaining_time
           ),
           style: "primary",
-          action_id: "resume"
-        }
-      ]
-    }
+          action_id: "resume",
+        },
+      ],
+    },
   ];
 }
 
@@ -905,11 +907,11 @@ function createCountDownBlocks(form: FormValue): {}[] {
             times
           )}. ${convertTimes(
             times
-          )} mob will finish in ${COUNT_DOWN_NOTIFICATION_TIME} minutes.`
-        }
-      ]
+          )} mob will finish in ${COUNT_DOWN_NOTIFICATION_TIME} minutes.`,
+        },
+      ],
     },
-    createTurnEndActionBlock(form)
+    createTurnEndActionBlock(form),
   ];
 }
 
@@ -926,9 +928,9 @@ function createConfirmChangeBlocks(
           text: `The next driver is ${pickUser(
             form.users,
             form.times
-          )}.\n Do you want <@${actionUser.id}> to take over?`
-        }
-      ]
+          )}.\n Do you want <@${actionUser.id}> to take over?`,
+        },
+      ],
     },
     {
       type: "actions",
@@ -937,7 +939,7 @@ function createConfirmChangeBlocks(
           type: "button",
           text: {
             type: "plain_text",
-            text: "Take over"
+            text: "Take over",
           },
           value: createFormValue(
             changeOrder(form, actionUser),
@@ -946,28 +948,28 @@ function createConfirmChangeBlocks(
             form.times
           ),
           style: "primary",
-          action_id: "change"
+          action_id: "change",
         },
         {
           type: "button",
           text: {
             type: "plain_text",
-            text: "In order"
+            text: "In order",
           },
           value: createFormValue(form.users, form.time, null, form.times),
-          action_id: "recontinue"
+          action_id: "recontinue",
         },
         {
           type: "button",
           text: {
             type: "plain_text",
-            text: "Cancel"
+            text: "Cancel",
           },
           value: '{ "cancel": true }',
-          action_id: "cancel"
-        }
-      ]
-    }
+          action_id: "cancel",
+        },
+      ],
+    },
   ];
 }
 
