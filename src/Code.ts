@@ -5,7 +5,7 @@ import { Slack } from "./slack/types/index.d";
 import { SlackWebhooks } from "./SlackWebhooks";
 import { SlackApiClient } from "./SlackApiClient";
 import { SlashCommandFunctionResponse } from "./SlashCommandHandler";
-import "apps-script-jobqueue";
+// import "apps-script-jobqueue";
 
 type TextOutput = GoogleAppsScript.Content.TextOutput;
 type HtmlOutput = GoogleAppsScript.HTML.HtmlOutput;
@@ -292,6 +292,7 @@ interface FormValue {
   times?: number;
   finish_at?: number;
   remaining_time?: number;
+  start_time?: number;
 }
 
 function createFormValue(
@@ -300,7 +301,8 @@ function createFormValue(
   scheduled_message_id: string = null,
   times: number = null,
   finish_at: number = null,
-  remaining_time: number = null
+  remaining_time: number = null,
+  start_time: number = null
 ): string {
   let form: FormValue = {
     users,
@@ -317,6 +319,9 @@ function createFormValue(
   }
   if (remaining_time) {
     form = { ...form, remaining_time };
+  }
+  if (start_time) {
+    form = { ...form, start_time };
   }
 
   return JSON.stringify(form);
@@ -364,7 +369,15 @@ function createConfirmBlocks(form: FormValue): {}[] {
             type: "plain_text",
             text: "Shuffle Start :game_die:",
           },
-          value: createFormValue(form.users, form.time),
+          value: createFormValue(
+            form.users,
+            form.time,
+            null,
+            null,
+            null,
+            null,
+            form.start_time
+          ),
           style: "primary",
           action_id: "shuffle",
         },
@@ -374,7 +387,15 @@ function createConfirmBlocks(form: FormValue): {}[] {
             type: "plain_text",
             text: "Nomal Start :motorway:",
           },
-          value: createFormValue(form.users, form.time, null, 0),
+          value: createFormValue(
+            form.users,
+            form.time,
+            null,
+            0,
+            null,
+            null,
+            form.start_time
+          ),
           style: "primary",
           action_id: "start",
         },
@@ -454,7 +475,8 @@ const executeButton = (blockActions: BlockActions): {} => {
     case "resume":
     case "recontinue":
     case "change":
-    case "start": {
+    case "start":
+    case "restart": {
       webhook.invoke({ replace_original: "true", blocks });
       const endTime = new Date();
       // Set end time
@@ -465,12 +487,18 @@ const executeButton = (blockActions: BlockActions): {} => {
         form.remaining_time = form.time * 1000 * 60;
       }
       form.finish_at = endTime.getTime();
+      // Set start time
+      if (form.start_time == null) {
+        form.start_time = new Date().getTime();
+      }
 
       form.scheduled_message_id = client.chatScheduleMessage(
         channel,
         endTime,
         null,
-        createMobedBlocks(form)
+        shouldTakeBreak(form, form.finish_at)
+          ? createBreakBlocks(form)
+          : createMobedBlocks(form)
       );
 
       const ts = client.chatPostMessage(
@@ -510,13 +538,31 @@ const executeButton = (blockActions: BlockActions): {} => {
         }
         return {};
       }
-      const mobedBlocks = createMobedBlocks(form);
+
       client.chatPostMessage(
         channel,
         null,
         null,
         null,
-        createMobedBlocks(form)
+        shouldTakeBreak(form)
+          ? createBreakBlocks(form)
+          : createMobedBlocks(form)
+      );
+
+      return {};
+    }
+    case "rested": {
+      webhook.invoke({ replace_original: "true", blocks });
+
+      // Set start time
+      form.start_time = new Date().getTime();
+
+      client.chatPostMessage(
+        channel,
+        null,
+        null,
+        null,
+        createRestartBlocks(form)
       );
 
       return {};
@@ -557,6 +603,13 @@ const executeButton = (blockActions: BlockActions): {} => {
   return {};
 };
 
+function shouldTakeBreak(form: FormValue, now: number = null): boolean {
+  const workTime = form.start_time - now ?? new Date().getTime();
+
+  // Over 75 min
+  return Math.abs(workTime) / (60 * 1000) > 75;
+}
+
 function createStartBlocks(form: FormValue): {}[] {
   const users = shuffle(form.users);
   const userOrder = users
@@ -584,7 +637,15 @@ function createStartBlocks(form: FormValue): {}[] {
             type: "plain_text",
             text: "Start Mobbing :motorway:",
           },
-          value: createFormValue(form.users, form.time, null, 0),
+          value: createFormValue(
+            form.users,
+            form.time,
+            null,
+            0,
+            null,
+            null,
+            form.start_time
+          ),
           style: "primary",
           action_id: "start",
         },
@@ -594,7 +655,15 @@ function createStartBlocks(form: FormValue): {}[] {
             type: "plain_text",
             text: "One more :game_die:",
           },
-          value: createFormValue(form.users, form.time),
+          value: createFormValue(
+            form.users,
+            form.time,
+            null,
+            null,
+            null,
+            null,
+            form.start_time
+          ),
           action_id: "reshuffle",
         },
         {
@@ -661,7 +730,8 @@ function createTurnEndActionBlock(form: FormValue): {} {
           form.time,
           form.scheduled_message_id,
           form.times,
-          form.finish_at
+          form.finish_at,
+          form.start_time
         ),
         style: "primary",
         action_id: "turn_end",
@@ -681,7 +751,8 @@ function createTurnEndActionBlock(form: FormValue): {} {
         form.time,
         form.scheduled_message_id,
         form.times,
-        form.finish_at
+        form.finish_at,
+        form.start_time
       ),
       action_id: "break",
     });
@@ -745,7 +816,15 @@ function createMobedBlocks(form: FormValue): {}[] {
             type: "plain_text",
             text: "Continue :raised_hands:",
           },
-          value: createFormValue(form.users, form.time, null, times),
+          value: createFormValue(
+            form.users,
+            form.time,
+            null,
+            times,
+            null,
+            null,
+            form.start_time
+          ),
           style: "primary",
           action_id: "continue",
         },
@@ -755,7 +834,15 @@ function createMobedBlocks(form: FormValue): {}[] {
             type: "plain_text",
             text: "Finish :checkered_flag:",
           },
-          value: createFormValue(form.users, form.time, null, times),
+          value: createFormValue(
+            form.users,
+            form.time,
+            null,
+            times,
+            null,
+            null,
+            form.start_time
+          ),
           style: "danger",
           confirm: {
             title: {
@@ -776,6 +863,58 @@ function createMobedBlocks(form: FormValue): {}[] {
             },
           },
           action_id: "finish",
+        },
+      ],
+    },
+  ];
+}
+
+function createBreakBlocks(form: FormValue): {}[] {
+  const times = form.times ?? 0;
+  const emoji = times % 2 === 0 ? ":+1:" : ":clap:";
+
+  return [
+    {
+      type: "context",
+      elements: [
+        {
+          type: "mrkdwn",
+          text: `:alarm_clock: Thank you ${pickUser(
+            form.users,
+            times
+          )}${emoji}`,
+        },
+      ],
+    },
+    {
+      type: "context",
+      elements: [
+        {
+          type: "mrkdwn",
+          text: `Why don't we take a break? :coffee:`,
+        },
+      ],
+    },
+    {
+      type: "actions",
+      elements: [
+        {
+          type: "button",
+          text: {
+            type: "plain_text",
+            text: "Rested enough :relaxed:",
+          },
+          value: createFormValue(
+            form.users,
+            form.time,
+            null,
+            times,
+            null,
+            null,
+            null
+          ),
+          style: "primary",
+          action_id: "rested",
         },
       ],
     },
@@ -829,7 +968,9 @@ function createRestBlocks(form: FormValue): {}[] {
             null,
             times,
             form.finish_at,
-            form.remaining_time
+            form.remaining_time,
+            // reset
+            null
           ),
           style: "primary",
           action_id: "resume",
@@ -945,7 +1086,10 @@ function createConfirmChangeBlocks(
             changeOrder(form, actionUser),
             form.time,
             null,
-            form.times
+            form.times,
+            null,
+            null,
+            form.start_time
           ),
           style: "primary",
           action_id: "change",
@@ -956,7 +1100,15 @@ function createConfirmChangeBlocks(
             type: "plain_text",
             text: "In order",
           },
-          value: createFormValue(form.users, form.time, null, form.times),
+          value: createFormValue(
+            form.users,
+            form.time,
+            null,
+            form.times,
+            null,
+            null,
+            form.start_time
+          ),
           action_id: "recontinue",
         },
         {
@@ -967,6 +1119,55 @@ function createConfirmChangeBlocks(
           },
           value: '{ "cancel": true }',
           action_id: "cancel",
+        },
+      ],
+    },
+  ];
+}
+
+function createRestartBlocks(form: FormValue): {}[] {
+  let times = form.times ?? 0;
+  // next times
+  times++;
+
+  return [
+    {
+      type: "context",
+      elements: [
+        {
+          type: "mrkdwn",
+          text: `The next time.. ${convertTimes(
+            times
+          )} mob. :man-woman-boy:\n pair :oncoming_automobile: Driver(${pickUser(
+            form.users,
+            times
+          )}), :world_map: Navigater(${pickUser(
+            form.users,
+            times + 1
+          )}).\nReady to go?`,
+        },
+      ],
+    },
+    {
+      type: "actions",
+      elements: [
+        {
+          type: "button",
+          text: {
+            type: "plain_text",
+            text: "I'm all set :ok_hand:",
+          },
+          value: createFormValue(
+            form.users,
+            form.time,
+            null,
+            times,
+            null,
+            null,
+            null
+          ),
+          style: "primary",
+          action_id: "restart",
         },
       ],
     },
