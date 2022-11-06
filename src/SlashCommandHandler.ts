@@ -21,7 +21,7 @@ class SlashCommandHandler extends SlackBaseHandler<SlashCommandFunction> {
       this.validateVerificationToken(token);
       return {
         performed: true,
-        output: this.convertJSONOutput(this.bindCommand(e.parameter))
+        output: this.convertJSONOutput(this.bindCommand(e.parameter)),
       };
     }
 
@@ -51,5 +51,5 @@ class SlashCommandHandler extends SlackBaseHandler<SlashCommandFunction> {
 export {
   SlashCommandHandler,
   SlashCommandFunction,
-  SlashCommandFunctionResponse
+  SlashCommandFunctionResponse,
 };

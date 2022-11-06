@@ -162,14 +162,14 @@ class OAuth2Handler {
     const formData = {
       client_id: this.clientId,
       client_secret: this.clientSecret,
-      code
+      code,
     };
 
     const options: URLFetchRequestOptions = {
       contentType: "application/x-www-form-urlencoded",
       method: "post",
       muteHttpExceptions: true,
-      payload: formData
+      payload: formData,
     };
 
     this.oAuthAccess = JSON.parse(

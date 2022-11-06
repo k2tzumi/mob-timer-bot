@@ -48,7 +48,7 @@ class SlackWebhooks {
 
   public sendText(text: string, thread_ts: string = null): boolean {
     let payload: {} = {
-      text
+      text,
     };
 
     if (thread_ts) {
@@ -63,7 +63,7 @@ class SlackWebhooks {
       headers: this.requestHeader(),
       method: "post",
       muteHttpExceptions: true,
-      payload: payload instanceof String ? payload : JSON.stringify(payload)
+      payload: payload instanceof String ? payload : JSON.stringify(payload),
     };
 
     return options;
@@ -71,7 +71,7 @@ class SlackWebhooks {
 
   private requestHeader() {
     return {
-      "content-type": "application/json; charset=UTF-8"
+      "content-type": "application/json; charset=UTF-8",
     };
   }
 }
