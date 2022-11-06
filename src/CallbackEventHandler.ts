@@ -35,13 +35,13 @@ class CallbackEventHandler extends SlackBaseHandler<CallbackEventFunction> {
         case "url_verification":
           return {
             output: this.convertJSONOutput({ challenge: postData.challenge }),
-            performed: true
+            performed: true,
           };
         case "event_callback":
           console.log({ message: "event_callback called.", data: postData });
           return {
             output: this.convertJSONOutput(this.bindEvent(postData)),
-            performed: true
+            performed: true,
           };
         default:
           break;
@@ -65,7 +65,7 @@ class CallbackEventHandler extends SlackBaseHandler<CallbackEventFunction> {
     if (listner) {
       return {
         output: this.convertJSONOutput(listner(event)),
-        performed: true
+        performed: true,
       };
     }
 

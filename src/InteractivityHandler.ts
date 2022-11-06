@@ -5,7 +5,9 @@ type TextOutput = GoogleAppsScript.Content.TextOutput;
 type Interaction = Slack.Interactivity.Interaction;
 type BlockActions = Slack.Interactivity.BlockActions;
 type BlockActionsFunction = (blockActions: BlockActions) => {};
-type InteractivityFunction = ((interaction: Interaction) => {} | void) | BlockActionsFunction;
+type InteractivityFunction =
+  | ((interaction: Interaction) => {} | void)
+  | BlockActionsFunction;
 
 class InteractivityHandler extends SlackBaseHandler<InteractivityFunction> {
   public handle(e): { performed: boolean; output: TextOutput | null } {
@@ -15,7 +17,7 @@ class InteractivityHandler extends SlackBaseHandler<InteractivityFunction> {
       const request = JSON.parse(payload);
       return {
         performed: true,
-        output: this.convertJSONOutput(this.bindInteractivity(request))
+        output: this.convertJSONOutput(this.bindInteractivity(request)),
       };
     }
 

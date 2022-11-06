@@ -1,14 +1,14 @@
 import {
   SlashCommandHandler,
-  SlashCommandFunction
+  SlashCommandFunction,
 } from "./SlashCommandHandler";
 import {
   InteractivityHandler,
-  InteractivityFunction
+  InteractivityFunction,
 } from "./InteractivityHandler";
 import {
   CallbackEventHandler,
-  CallbackEventFunction
+  CallbackEventFunction,
 } from "./CallbackEventHandler";
 
 type TextOutput = GoogleAppsScript.Content.TextOutput;
