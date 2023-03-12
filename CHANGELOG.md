@@ -1,5 +1,9 @@
 # Changelog
 
+## [v0.0.2](https://github.com/k2tzumi/mob-timer-bot/compare/v0.0.1...v0.0.2) - 2023-03-12
+### Other Changes
+- Bump up version library by @k2tzumi in https://github.com/k2tzumi/mob-timer-bot/pull/23
+
 ## [v0.0.1](https://github.com/k2tzumi/mob-timer-bot/commits/v0.0.1) - 2023-03-12
 ### Other Changes
 - ⬆️ Bump node-fetch from 2.6.0 to 2.6.1 by @dependabot in https://github.com/k2tzumi/mob-timer-bot/pull/2
