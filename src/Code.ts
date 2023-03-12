@@ -22,6 +22,7 @@ type InteractionResponse = Slack.Interactivity.InteractionResponse;
 type AppsManifest = Slack.Tools.AppsManifest;
 type Parameter = AppsScriptJobqueue.Parameter;
 type TimeBasedEvent = AppsScriptJobqueue.TimeBasedEvent;
+type AppMentionEvent = Slack.CallbackEvent.AppMentionEvent;
 
 const properties = PropertiesService.getScriptProperties();
 
@@ -179,6 +180,10 @@ function createAppsManifest(
     };
 
     appsManifest.settings = {
+      event_subscriptions: {
+        request_url: requestUrl,
+        bot_events: ["app_mention"],
+      },
       interactivity: {
         is_enabled: true,
         request_url: requestUrl,
@@ -211,6 +216,7 @@ function doPost(e: DoPost): TextOutput {
   );
   slackHandler.addInteractivityListener("static_select", executeStaticSelect);
   slackHandler.addInteractivityListener("button", executeButton);
+  slackHandler.addCallbackEventListener("app_mention", executeAppMentionEvent);
 
   try {
     const process = slackHandler.handle(e);
@@ -269,7 +275,18 @@ const executeSlashCommand = (
   return response;
 };
 
-function createSelectUserBlocks(user_id: string): object {
+const executeAppMentionEvent = (event: AppMentionEvent): void => {
+  const slackApiClient = new SlackApiClient(handler.token);
+  slackApiClient.chatPostMessage(
+    event.channel,
+    "Please set a timer.",
+    null,
+    null,
+    createSelectUserBlocks(event.user)
+  );
+};
+
+function createSelectUserBlocks(user_id: string): Record<never, never>[] {
   return [
     {
       type: "section",
