@@ -1156,9 +1156,13 @@ function countDown(parameter: {
       null,
       createCountDownBlocks(form)
     );
-  }
 
-  return true;
+    return true;
+  } else {
+    console.log("Already finished.");
+
+    return false;
+  }
 }
 
 function createCountDownBlocks(form: FormValue): object {
