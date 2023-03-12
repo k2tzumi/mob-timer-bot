@@ -16,7 +16,7 @@
 #       Flag whether or not v-prefix is added to semver when git tagging. (e.g. v1.2.3 if true)
 [tagpr]
 	vPrefix = true
-	releaseBranch = main
+	releaseBranch = master
 	versionFile = package.json
 	majorLabels = major
 	minorLabels = enhancement,minor
