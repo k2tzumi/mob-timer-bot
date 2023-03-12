@@ -43,6 +43,7 @@ jobs:
   
               await git.addConfig('user.name', 'GitHub Actions');
               await git.addConfig('user.email', 'actions@github.com');
+              await git.addConfig('push.autoSetupRemote', true);
   
               await git.checkout(pullRequest.head.ref);
   
