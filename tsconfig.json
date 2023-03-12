@@ -1,7 +1,27 @@
 {
     "compilerOptions": {
-        "target": "ES2019",
+        "target": "es2019",
+        "module": "commonjs",
+        "lib": [
+            "es2019"
+        ],
+        "declaration": false,
+        "outDir": "dist",
+        "strict": true,
         "esModuleInterop": true,
-        "moduleResolution": "Node",
-    }
+        "sourceMap": true,
+        "moduleResolution": "node",
+        "noImplicitReturns": true,
+        "noImplicitAny": true,
+        "noUnusedLocals": true,
+        "noUnusedParameters": true,
+        "useUnknownInCatchVariables": true
+    },
+    "include": [
+        "src/**/*"
+    ],
+    "exclude": [
+        "node_modules",
+        "dist"
+    ]
 }

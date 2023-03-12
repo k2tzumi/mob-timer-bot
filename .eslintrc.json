@@ -1,0 +1,43 @@
+{
+    "env": {
+      "es6": true,
+      "googleappsscript/googleappsscript": true
+    },
+    "extends": [
+      "plugin:@typescript-eslint/recommended",
+      "prettier"
+    ],
+    "plugins": [
+      "@typescript-eslint",
+      "googleappsscript",
+      "prettier"
+    ],
+    "parser": "@typescript-eslint/parser",
+    "parserOptions": {
+      "ecmaVersion": 2019,
+      "sourceType": "module",
+      "project": "./tsconfig.json"
+    },
+    "rules": {
+      "prettier/prettier": "error",
+      "import/extensions": "off",
+      "@typescript-eslint/explicit-function-return-type": "off",
+      "@typescript-eslint/triple-slash-reference": "off",
+      "@typescript-eslint/no-explicit-any": "off",
+      "@typescript-eslint/naming-convention": [
+        "error",
+        {
+          "selector": "property",
+          "format": ["camelCase", "snake_case", "UPPER_CASE", "PascalCase"],
+          "leadingUnderscore": "allow"
+        }
+      ],
+      "no-unused-vars": "off",
+      "@typescript-eslint/no-unused-vars": [
+        "error"
+      ],
+      "no-useless-constructor": "off",
+      "@typescript-eslint/no-useless-constructor": "error",
+      "class-methods-use-this": "off"
+    }
+  }
