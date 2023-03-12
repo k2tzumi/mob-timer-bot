@@ -3,6 +3,8 @@ import { NetworkAccessError } from "./NetworkAccessError";
 type URLFetchRequestOptions = GoogleAppsScript.URL_Fetch.URLFetchRequestOptions;
 type HttpMethod = GoogleAppsScript.URL_Fetch.HttpMethod;
 type HTTPResponse = GoogleAppsScript.URL_Fetch.HTTPResponse;
+type AppsManifest = Slack.Tools.AppsManifest;
+type Credentials = Slack.Tools.Credentials;
 
 interface Response {
   ok: boolean;
@@ -30,16 +32,18 @@ interface Block {
 }
 
 // type=divider
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 type DividerBlock = Block;
 
 interface ContextBlock extends Block {
   // type=context
-  elements: (TextCompositionObject | {})[];
+  elements: (TextCompositionObject | Record<never, never>)[];
 }
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 interface ActionsBlock extends Block {
   // type=actions
-  elements: {}[];
+  elements: Record<never, never>[];
 }
 
 interface HeaderBlock extends Block {
@@ -50,8 +54,8 @@ interface HeaderBlock extends Block {
 interface SectionBlock extends Block {
   // type=section
   text: TextCompositionObject;
-  fields: {}[];
-  accessory: {};
+  fields: Record<never, never>[];
+  accessory: Record<never, never>;
 }
 
 interface ChatScheduleMessageResponse extends Response {
@@ -74,14 +78,70 @@ interface ConversationsHistoryResponse extends Response {
   response_metadata: { next_cursor: string };
 }
 
+interface CreateAppsManifestResponse extends Response {
+  app_id: string;
+  credentials: Credentials;
+  oauth_authorize_url: string;
+}
+
+interface UpdateManifestResponse extends Response {
+  app_id: string;
+  permissions_updated: boolean;
+}
+
+interface RotateTokensResponse extends Response {
+  token: string;
+  refresh_token: string;
+  team_id: string;
+  user_id: string;
+  iat: number;
+  exp: number;
+}
+
+interface ConversationsRepliesResponse extends Response {
+  messages: {
+    type: string;
+    user?: string;
+    bot_id?: string;
+    text: string;
+    thread_ts: string;
+    parent_user_id?: string;
+    reply_count?: number;
+    subscribed?: boolean;
+    last_read?: string;
+    unread_count?: number;
+    ts: string;
+  }[];
+  has_more: boolean;
+  response_metadata: {
+    next_cursor: string;
+  };
+}
+
+interface BotsInfoResponse extends Response {
+  bot: {
+    id: string;
+    deleted: boolean;
+    name: string;
+    updated: number;
+    app_id: string;
+    user_id: string;
+    icons: {
+      image_36: string;
+      image_48: string;
+      image_72: string;
+    };
+  };
+}
+
 class SlackApiClient {
   static readonly BASE_PATH = "https://slack.com/api/";
 
   public constructor(private token: string) {}
 
-  public oepnDialog(dialog: {}, trigger_id: string): void {
+  public oepnDialog(dialog: Record<never, never>, trigger_id: string): void {
     const endPoint = SlackApiClient.BASE_PATH + "dialog.open";
-    const payload: {} = {
+    const payload: Record<never, never> = {
       dialog,
       trigger_id,
     };
@@ -97,9 +157,9 @@ class SlackApiClient {
     }
   }
 
-  public openViews(views: {}, trigger_id: string): void {
+  public openViews(views: Record<never, never>, trigger_id: string): void {
     const endPoint = SlackApiClient.BASE_PATH + "views.open";
-    const payload: {} = {
+    const payload: Record<never, never> = {
       view: views,
       trigger_id,
     };
@@ -115,9 +175,13 @@ class SlackApiClient {
     }
   }
 
-  public updateViews(views: {}, hash: string, view_id: string): void {
+  public updateViews(
+    views: Record<never, never>,
+    hash: string,
+    view_id: string
+  ): void {
     const endPoint = SlackApiClient.BASE_PATH + "views.update";
-    const payload: {} = {
+    const payload: Record<never, never> = {
       view: views,
       hash,
       view_id,
@@ -140,7 +204,7 @@ class SlackApiClient {
     timestamp: string
   ): boolean {
     const endPoint = SlackApiClient.BASE_PATH + "reactions.add";
-    const payload: {} = {
+    const payload: Record<never, never> = {
       channel,
       name,
       timestamp,
@@ -163,13 +227,24 @@ class SlackApiClient {
     return true;
   }
 
-  public postEphemeral(channel: string, text: string, user: string): void {
+  public postEphemeral(
+    channel: string,
+    text: string,
+    user: string,
+    blocks: (Block | Record<never, never>)[] | null = null
+  ): void {
     const endPoint = SlackApiClient.BASE_PATH + "chat.postEphemeral";
-    const payload: {} = {
+    let payload: Record<never, never> = {
       channel,
       text,
       user,
     };
+    if (blocks) {
+      if (!text) {
+        text = this.convertBlock2Text(blocks);
+      }
+      payload = { ...payload, blocks };
+    }
 
     const response: Response = this.invokeAPI(endPoint, payload);
 
@@ -185,12 +260,12 @@ class SlackApiClient {
   public chatPostMessage(
     channel: string,
     text: string,
-    thread_ts: string = null,
-    attachments: {}[] = null,
-    blocks: (Block | {})[] = null
+    thread_ts: string | null = null,
+    attachments: Record<never, never>[] | null = null,
+    blocks: (Block | Record<never, never>)[] | null = null
   ): string {
     const endPoint = SlackApiClient.BASE_PATH + "chat.postMessage";
-    let payload: {} = {
+    let payload: Record<never, never> = {
       channel,
     };
     if (thread_ts) {
@@ -213,6 +288,7 @@ class SlackApiClient {
     ) as ChatPostMessageResponse;
 
     if (!response.ok) {
+      console.info(`post message faild. response: ${JSON.stringify(response)}`);
       throw new Error(
         `post message faild. response: ${JSON.stringify(
           response
@@ -227,10 +303,10 @@ class SlackApiClient {
     channel: string,
     post_at: Date,
     text?: string,
-    blocks?: (Block | {})[]
+    blocks?: (Block | Record<never, never>)[]
   ): string {
     const endPoint = SlackApiClient.BASE_PATH + "chat.scheduleMessage";
-    let payload: {} = {
+    let payload: Record<never, never> = {
       channel,
       post_at: Math.ceil(post_at.getTime() / 1000),
     };
@@ -263,7 +339,7 @@ class SlackApiClient {
     scheduled_message_id: string
   ): boolean {
     const endPoint = SlackApiClient.BASE_PATH + "chat.deleteScheduledMessage";
-    const payload: {} = {
+    const payload: Record<never, never> = {
       channel,
       scheduled_message_id,
     };
@@ -292,7 +368,7 @@ class SlackApiClient {
     oldest?: string
   ): Message[] {
     const endPoint = SlackApiClient.BASE_PATH + "conversations.history";
-    let payload: {} = {
+    let payload: Record<never, never> = {
       channel,
       inclusive: true,
     };
@@ -326,10 +402,10 @@ class SlackApiClient {
     channel: string,
     ts: string,
     text?: string,
-    blocks?: (Block | {})[]
+    blocks?: (Block | Record<never, never>)[]
   ): void {
     const endPoint = SlackApiClient.BASE_PATH + "chat.update";
-    let payload: {} = {
+    let payload: Record<never, never> = {
       channel,
       ts,
     };
@@ -352,8 +428,148 @@ class SlackApiClient {
     }
   }
 
-  private convertBlock2Text(blocks: (Block | {})[]): string {
-    const textArray = [];
+  public createAppsManifest(
+    appsManifest: AppsManifest
+  ): CreateAppsManifestResponse {
+    const endPoint = SlackApiClient.BASE_PATH + "apps.manifest.create";
+    const manifest = JSON.stringify(appsManifest);
+    let payload: Record<never, never> = {};
+    payload = { ...payload, manifest };
+
+    const response = this.invokeAPI(
+      endPoint,
+      payload
+    ) as CreateAppsManifestResponse;
+
+    if (!response.ok) {
+      throw new Error(
+        `create apps manifest faild. response: ${JSON.stringify(
+          response
+        )}, payload: ${JSON.stringify(payload)}`
+      );
+    }
+
+    return response;
+  }
+
+  public updateAppsManifest(
+    app_id: string,
+    appsManifest: AppsManifest
+  ): UpdateManifestResponse {
+    const endPoint = SlackApiClient.BASE_PATH + "apps.manifest.update";
+    const manifest = JSON.stringify(appsManifest);
+    let payload: Record<never, never> = {
+      app_id,
+    };
+    payload = { ...payload, manifest };
+
+    const response = this.invokeAPI(
+      endPoint,
+      payload
+    ) as UpdateManifestResponse;
+
+    if (!response.ok) {
+      throw new Error(
+        `update apps manifest faild. response: ${JSON.stringify(
+          response
+        )}, payload: ${JSON.stringify(payload)}`
+      );
+    }
+
+    return response;
+  }
+
+  public deleteAppsManifest(app_id: string): Response {
+    const endPoint = SlackApiClient.BASE_PATH + "apps.manifest.delete";
+    const payload: Record<never, never> = {
+      app_id,
+    };
+
+    const response = this.invokeAPI(endPoint, payload) as Response;
+
+    if (!response.ok) {
+      throw new Error(
+        `delete apps manifest faild. response: ${JSON.stringify(
+          response
+        )}, payload: ${JSON.stringify(payload)}`
+      );
+    }
+
+    return response;
+  }
+
+  public rotateTokens(refresh_token: string): RotateTokensResponse {
+    const endPoint = SlackApiClient.BASE_PATH + "tooling.tokens.rotate";
+    const payload: Record<never, never> = {
+      refresh_token,
+    };
+
+    const response = this.invokeAPI(endPoint, payload) as RotateTokensResponse;
+
+    if (!response.ok) {
+      throw new Error(
+        `roteate tokens faild. response: ${JSON.stringify(
+          response
+        )}, payload: ${JSON.stringify(payload)}`
+      );
+    }
+
+    return response;
+  }
+
+  /**
+   * @see https://api.slack.com/methods/conversations.replies
+   */
+  public conversationsReplies(
+    channel: string,
+    ts: string
+  ): ConversationsRepliesResponse {
+    const endPoint = SlackApiClient.BASE_PATH + "conversations.replies";
+    const payload: Record<never, never> = {
+      channel,
+      ts,
+    };
+
+    const response = this.invokeAPI(
+      endPoint,
+      payload
+    ) as ConversationsRepliesResponse;
+
+    if (!response.ok) {
+      throw new Error(
+        `conversations replies faild. response: ${JSON.stringify(
+          response
+        )}, payload: ${JSON.stringify(payload)}`
+      );
+    }
+
+    return response;
+  }
+
+  /**
+   * @see https://api.slack.com/methods/bots.info
+   */
+  public infoBots(bot: string): BotsInfoResponse {
+    const endPoint = SlackApiClient.BASE_PATH + "bots.info";
+    const payload: Record<never, never> = {
+      bot,
+    };
+
+    const response = this.invokeAPI(endPoint, payload) as BotsInfoResponse;
+
+    if (!response.ok) {
+      throw new Error(
+        `bots info faild. response: ${JSON.stringify(
+          response
+        )}, payload: ${JSON.stringify(payload)}`
+      );
+    }
+
+    return response;
+  }
+
+  private convertBlock2Text(blocks: (Block | Record<never, never>)[]): string {
+    const textArray: string[] = [];
     blocks.forEach((block) => {
       if (block.hasOwnProperty("type")) {
         const obj = block as Block;
@@ -390,6 +606,7 @@ class SlackApiClient {
 
   private postRequestHeader() {
     return {
+      // eslint-disable-next-line @typescript-eslint/naming-convention
       "content-type": "application/json; charset=UTF-8",
       Authorization: `Bearer ${this.token}`,
     };
@@ -397,12 +614,15 @@ class SlackApiClient {
 
   private getRequestHeader() {
     return {
+      // eslint-disable-next-line @typescript-eslint/naming-convention
       "content-type": "application/x-www-form-urlencoded",
       Authorization: `Bearer ${this.token}`,
     };
   }
 
-  private postRequestOptions(payload: string | {}): URLFetchRequestOptions {
+  private postRequestOptions(
+    payload: string | Record<never, never>
+  ): URLFetchRequestOptions {
     const options: URLFetchRequestOptions = {
       method: "post",
       headers: this.postRequestHeader(),
@@ -428,7 +648,7 @@ class SlackApiClient {
    * @param options
    * @throws NetworkAccessError
    */
-  private invokeAPI(endPoint: string, payload: {}): Response {
+  private invokeAPI(endPoint: string, payload: Record<never, never>): Response {
     let response: HTTPResponse;
 
     try {
@@ -445,6 +665,8 @@ class SlackApiClient {
             this.getRequestOptions()
           );
           break;
+        default:
+          throw new Error("Unknown method.");
       }
     } catch (e) {
       console.warn(`DNS error, etc. ${e.message}`);
@@ -468,13 +690,19 @@ class SlackApiClient {
   private preferredHttpMethod(endPoint: string): HttpMethod {
     switch (true) {
       case /(.)*conversations\.history$/.test(endPoint):
+      case /(.)*tooling\.tokens\.rotate$/.test(endPoint):
+      case /(.)*conversations\.replies$/.test(endPoint):
+      case /(.)*bots\.info$/.test(endPoint):
         return "get";
       default:
         return "post";
     }
   }
 
-  private formUrlEncoded(endPoint: string, payload: {}): string {
+  private formUrlEncoded(
+    endPoint: string,
+    payload: Record<never, never>
+  ): string {
     const query = Object.entries<string>(payload)
       .map(([key, value]) => `${key}=${encodeURI(value)}`)
       .join("&");
@@ -483,4 +711,4 @@ class SlackApiClient {
   }
 }
 
-export { SlackApiClient };
+export { SlackApiClient, ConversationsRepliesResponse };

@@ -5,12 +5,12 @@
       {
         "userSymbol": "JobBroker",
         "libraryId": "11cz2CGI2m3W1_JS7PwnxL2_6hkvtj47ynFuxKDDAAUwh3jP04sYnigg8",
-        "version": "20"
+        "version": "55"
       },
       {
         "userSymbol": "OAuth2",
         "libraryId": "1B7FSrk5Zi6L1rSxxTDgDEUsPzlukDsi4KGuTMorsTQHhGBzBkMun4iDF",
-        "version": "38"
+        "version": "43"
       }
     ]
   },

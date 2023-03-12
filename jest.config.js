@@ -7,6 +7,8 @@ module.exports = {
         CacheService: {},
         ContentService: {},
         ScriptApp: {},
+        Utilities: {},
+        cCryptoGS: {},
         JobBroker: {},
     },
     moduleDirectories: [
@@ -22,6 +24,9 @@ module.exports = {
     testMatch: ["**/__tests__/**/*.[jt]s?(x)", "**/?(*.)+(spec|test).[jt]s?(x)"],
     testEnvironment: 'node',
     transform: {
-        '^.+\\.tsx?$': ['ts-jest', { diagnostics: false }]
+        '^.+\\.tsx?$': ['ts-jest', { tsconfig: "tsconfig.json", diagnostics: false }]
     },
+    transformIgnorePatterns: [
+        "/node_modules/(?!apps-script-jobqueue)"
+    ]
 };
