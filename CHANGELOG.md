@@ -1,5 +1,10 @@
 # Changelog
 
+## [v0.0.4](https://github.com/k2tzumi/mob-timer-bot/compare/v0.0.3...v0.0.4) - 2023-03-12
+### Other Changes
+- Support for command invocation by app_mention by @k2tzumi in https://github.com/k2tzumi/mob-timer-bot/pull/27
+- Rewrote README for newer versions by @k2tzumi in https://github.com/k2tzumi/mob-timer-bot/pull/29
+
 ## [v0.0.3](https://github.com/k2tzumi/mob-timer-bot/compare/v0.0.2...v0.0.3) - 2023-03-12
 ### Other Changes
 - Refactor settings. by @k2tzumi in https://github.com/k2tzumi/mob-timer-bot/pull/25
