@@ -1,5 +1,6 @@
 type Cache = GoogleAppsScript.Cache.Cache;
 type TextOutput = GoogleAppsScript.Content.TextOutput;
+type DoPost = GoogleAppsScript.Events.DoPost;
 
 abstract class SlackBaseHandler<T> {
   protected cache: Cache;
@@ -10,13 +11,16 @@ abstract class SlackBaseHandler<T> {
     this.listners = new Map<string, T>();
   }
 
-  public abstract handle(e): { performed: boolean; output: TextOutput | null };
+  public abstract handle(e: DoPost): {
+    performed: boolean;
+    output: TextOutput | null;
+  };
 
   public addListener(type: string, handler: T): void {
     this.listners.set(type, handler);
   }
 
-  protected getListener(type: string): T | null {
+  protected getListener(type: string): T | null | undefined {
     return this.listners.get(type);
   }
 
@@ -27,7 +31,7 @@ abstract class SlackBaseHandler<T> {
   }
 
   protected isHandleProceeded(id: string): boolean {
-    const key: string = `${this.constructor.name}#${id}`;
+    const key = `${this.constructor.name}#${id}`;
 
     if (this.cache.get(key)) {
       return true;
@@ -37,7 +41,9 @@ abstract class SlackBaseHandler<T> {
     }
   }
 
-  protected convertJSONOutput(response: {} | null | void): TextOutput {
+  protected convertJSONOutput(
+    response: Record<never, never> | null | void
+  ): TextOutput {
     if (response) {
       return ContentService.createTextOutput(
         JSON.stringify(response)

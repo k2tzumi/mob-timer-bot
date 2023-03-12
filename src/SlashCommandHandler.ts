@@ -3,18 +3,19 @@ import { Slack } from "./slack/types/index.d";
 
 type TextOutput = GoogleAppsScript.Content.TextOutput;
 type Commands = Slack.SlashCommand.Commands;
+type DoPost = GoogleAppsScript.Events.DoPost;
 
 interface SlashCommandFunctionResponse {
   response_type: string;
   text?: string;
-  blocks?: {};
+  blocks?: object;
 }
 type SlashCommandFunction = (
   commands: Commands
 ) => SlashCommandFunctionResponse;
 
 class SlashCommandHandler extends SlackBaseHandler<SlashCommandFunction> {
-  public handle(e): { performed: boolean; output: TextOutput | null } {
+  public handle(e: DoPost): { performed: boolean; output: TextOutput | null } {
     const { token, command } = e.parameter;
 
     if (command) {

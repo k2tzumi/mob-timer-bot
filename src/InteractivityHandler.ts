@@ -4,13 +4,16 @@ import { Slack } from "./slack/types/index.d";
 type TextOutput = GoogleAppsScript.Content.TextOutput;
 type Interaction = Slack.Interactivity.Interaction;
 type BlockActions = Slack.Interactivity.BlockActions;
-type BlockActionsFunction = (blockActions: BlockActions) => {};
+type DoPost = GoogleAppsScript.Events.DoPost;
+type BlockActionsFunction = (
+  blockActions: BlockActions
+) => Record<never, never>;
 type InteractivityFunction =
-  | ((interaction: Interaction) => {} | void)
+  | ((interaction: Interaction) => Record<never, never> | void)
   | BlockActionsFunction;
 
 class InteractivityHandler extends SlackBaseHandler<InteractivityFunction> {
-  public handle(e): { performed: boolean; output: TextOutput | null } {
+  public handle(e: DoPost): { performed: boolean; output: TextOutput | null } {
     const { payload } = e.parameter;
 
     if (payload) {
@@ -24,7 +27,9 @@ class InteractivityHandler extends SlackBaseHandler<InteractivityFunction> {
     return { performed: false, output: null };
   }
 
-  private bindInteractivity(interaction: Interaction): {} | void {
+  private bindInteractivity(
+    interaction: Interaction
+  ): Record<never, never> | void {
     const { type, token } = interaction;
     this.validateVerificationToken(token);
 

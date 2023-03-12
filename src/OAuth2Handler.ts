@@ -42,10 +42,11 @@ interface IncomingWebhook {
 }
 
 type TokenPayload = GoogleAppsScriptOAuth2.TokenPayload;
+type Credentials = Slack.Tools.Credentials;
 
 class OAuth2Handler {
-  public get token(): string {
-    const ACCESS_TOKEN: string = this.propertyStore.getProperty("ACCESS_TOKEN");
+  public get token(): string | null {
+    const ACCESS_TOKEN = this.propertyStore.getProperty("ACCESS_TOKEN");
 
     if (ACCESS_TOKEN !== null) {
       return ACCESS_TOKEN;
@@ -59,10 +60,17 @@ class OAuth2Handler {
         return token;
       }
     }
+
+    return null;
   }
 
   public get authorizationUrl(): string {
     return this.service.getAuthorizationUrl();
+  }
+
+  public get callbackURL(): string {
+    const scriptId = ScriptApp.getScriptId();
+    return `https://script.google.com/macros/d/${scriptId}/usercallback`;
   }
 
   public get redirectUri(): string {
@@ -86,51 +94,46 @@ class OAuth2Handler {
     return this.propertyStore.getProperty("INCOMING_WEBHOOKS_URL");
   }
 
-  private get eventSubscriptionsUrl(): string | null {
-    if (this.oAuthAccess) {
-      return `https://api.slack.com/apps/${this.oAuthAccess.app_id}/event-subscriptions`;
-    }
-    return null;
+  public get installUrl(): string {
+    return `https://slack.com/oauth/v2/authorize?scope=${encodeURI(
+      OAuth2Handler.SCOPE
+    )}&client_id=${this.credentials.client_id}&redirect_uri=${
+      this.authorizationUrl
+    }`;
   }
 
-  private get slashCommnadsUrl(): string | null {
-    if (this.oAuthAccess) {
-      return `https://api.slack.com/apps/${this.oAuthAccess.app_id}/slash-commands`;
-    }
-    return null;
-  }
-
-  private get interactiveMessagesUrl(): string | null {
-    if (this.oAuthAccess) {
-      return `https://api.slack.com/apps/${this.oAuthAccess.app_id}/interactive-messages`;
-    }
-    return null;
+  public get reInstallUrl(): string {
+    return `https://slack.com/oauth/v2/authorize?client_id=${
+      this.credentials.client_id
+    }&install_redirect=general&scope=${encodeURI(OAuth2Handler.SCOPE)}`;
   }
 
   public static readonly SCOPE =
-    "commands,chat:write,channels:history,groups:history,mpim:history,im:history";
+    "commands,chat:write,channels:history,groups:history,mpim:history,im:history,app_mentions:read,reactions:write,users:read";
 
   private service: OAuth2Service;
 
   private oAuthAccess: OauthAccess;
 
   public constructor(
-    private clientId: string,
-    private clientSecret: string,
+    private credentials: Credentials,
     private propertyStore: Properties,
     private callbackFunctionName: string
   ) {
     this.service = OAuth2.createService("slack")
       .setAuthorizationBaseUrl("https://slack.com/oauth/v2/authorize")
-      .setTokenUrl("https://api.slack.com/methods/oauth.v2.access")
-      // .setTokenFormat(GoogleAppsScriptOAuth2.TokenFormat.FORM_URL_ENCODED)
+      .setTokenUrl("https://slack.com/api/oauth.v2.access")
       .setTokenFormat("application/x-www-form-urlencoded")
-      .setClientId(this.clientId)
-      .setClientSecret(this.clientSecret)
+      // .setTokenFormat(GoogleAppsScriptOAuth2.TokenFormat.FORM_URL_ENCODED)
       .setCallbackFunction(this.callbackFunctionName)
       .setPropertyStore(this.propertyStore)
       .setScope(OAuth2Handler.SCOPE)
       .setTokenPayloadHandler(this.tokenPayloadHandler);
+
+    if (credentials !== null) {
+      this.service.setClientId(credentials.client_id);
+      this.service.setClientSecret(credentials.client_secret);
+    }
   }
 
   /**
@@ -144,7 +147,9 @@ class OAuth2Handler {
       }
     }
 
-    return HtmlService.createHtmlOutput("Denied. You can close this tab.");
+    return HtmlService.createHtmlOutput(
+      "Denied. You can close this tab."
+    ).setTitle("OAuth failed.");
   }
 
   /**
@@ -160,8 +165,8 @@ class OAuth2Handler {
 
   private getOauthAccess(code: string): OauthAccess | null {
     const formData = {
-      client_id: this.clientId,
-      client_secret: this.clientSecret,
+      client_id: this.credentials.client_id,
+      client_secret: this.credentials.client_secret,
       code,
     };
 
@@ -171,7 +176,6 @@ class OAuth2Handler {
       muteHttpExceptions: true,
       payload: formData,
     };
-
     this.oAuthAccess = JSON.parse(
       UrlFetchApp.fetch(
         "https://slack.com/api/oauth.v2.access",
@@ -215,26 +219,9 @@ class OAuth2Handler {
   };
 
   private createAuthenSuccessHtml(): HtmlOutput {
-    let successMessage = `
-        Success!<br />
-        Setting Request URL.<br />
-        <a href="<?= eventSubscriptionsUrl ?>" target="_blank">Setting EventSubscriptions</a><br />
-        <a href="<?= interactiveMessagesUrl ?>" target="_blank" >Setting Interactivity & Shortcuts</a><br />
-        `;
-
-    if (OAuth2Handler.SCOPE.indexOf("commands") !== -1) {
-      successMessage += `<a href="<?= slashCommnadsUrl ?>" target="_blank" >Setting Slash Commands</a><br />`;
-    }
-
-    const template = HtmlService.createTemplate(successMessage);
-    template.eventSubscriptionsUrl = this.eventSubscriptionsUrl;
-    template.interactiveMessagesUrl = this.interactiveMessagesUrl;
-
-    if (OAuth2Handler.SCOPE.indexOf("commands") !== -1) {
-      template.slashCommnadsUrl = this.slashCommnadsUrl;
-    }
-
-    return HtmlService.createHtmlOutput(template.evaluate());
+    return HtmlService.createHtmlOutput("Success!<br />").setTitle(
+      "OAuth is now complete."
+    );
   }
 }
 
