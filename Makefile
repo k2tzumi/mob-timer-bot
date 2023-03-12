@@ -8,7 +8,7 @@ help:
 
 .clasp.json:
 	make login
-	$(CLASP) create --title openai-slack-bot --type webapp --rootDir ./src
+	$(CLASP) create --title mob-timer-bot --type webapp --rootDir ./src
 	mv src/.clasp.json .
 	$(CLASP) setting fileExtension ts
 	# $(CLASP) setting filePushOrder
