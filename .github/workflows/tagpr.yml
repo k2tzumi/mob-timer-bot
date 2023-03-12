@@ -20,3 +20,28 @@ jobs:
         uses: Songmu/tagpr@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Trigger CI Workflow
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const refs = '${{ fromJson(steps.tagpr.outputs.pull_request).head.ref }}'
+            const { data: pullRequests } = github.rest.pulls.list({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              head: refs
+            });
+
+            if (pullRequests.length > 0) {
+              const pullRequest = pullRequests[0];
+              const git = require('simple-git')();
+  
+              await git.addConfig('user.name', 'GitHub Actions');
+              await git.addConfig('user.email', 'actions@github.com');
+  
+              await git.checkout(pullRequest.head.ref);
+  
+              await git.commit('Trigger synchronize event', { '--allow-empty': null });
+              
+              await git.push(['--force-with-lease']);
+            }
