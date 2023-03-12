@@ -235,7 +235,7 @@ function doPost(e: DoPost): TextOutput {
 
 const executeSlashCommand = (
   commands: Commands
-): SlashCommandFunctionResponse | null => {
+): SlashCommandFunctionResponse => {
   const response: SlashCommandFunctionResponse =
     {} as SlashCommandFunctionResponse;
 
