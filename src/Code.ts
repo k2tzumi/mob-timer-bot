@@ -269,7 +269,7 @@ const executeSlashCommand = (
   return response;
 };
 
-function createSelectUserBlocks(user_id: string): {}[] {
+function createSelectUserBlocks(user_id: string): object {
   return [
     {
       type: "section",
@@ -304,7 +304,9 @@ function createSelectUserBlocks(user_id: string): {}[] {
   ];
 }
 
-const executeMultiUserSelect = (blockActions: BlockActions): {} => {
+const executeMultiUserSelect = (
+  blockActions: BlockActions
+): Record<never, never> => {
   const action = blockActions.actions[0] as MultiUsersSelectAction;
 
   const webhook = new SlackWebhooks(blockActions.response_url);
@@ -321,7 +323,7 @@ const executeMultiUserSelect = (blockActions: BlockActions): {} => {
   return {};
 };
 
-function createSelectTimerBlocks(selected_users: string[]): {}[] {
+function createSelectTimerBlocks(selected_users: string[]): object {
   return [
     {
       type: "context",
@@ -449,7 +451,9 @@ function createFormValue(
   return JSON.stringify(form);
 }
 
-const executeStaticSelect = (blockActions: BlockActions): {} => {
+const executeStaticSelect = (
+  blockActions: BlockActions
+): Record<never, never> => {
   const action = blockActions.actions[0] as StaticSelectAction;
 
   const webhook = new SlackWebhooks(blockActions.response_url);
@@ -467,7 +471,7 @@ const executeStaticSelect = (blockActions: BlockActions): {} => {
   return {};
 };
 
-function createConfirmBlocks(form: FormValue): {}[] {
+function createConfirmBlocks(form: FormValue): object {
   return [
     {
       type: "context",
@@ -540,7 +544,7 @@ const COUNT_DOWN_NOTIFICATION_TIME: number = parseInt(
   properties.getProperty("COUNT_DOWN_NOTIFICATION_TIME") || "5",
   10
 );
-const executeButton = (blockActions: BlockActions): {} => {
+const executeButton = (blockActions: BlockActions): Record<never, never> => {
   const action = blockActions.actions[0] as ButtonAction;
   const response: InteractionResponse = {};
 
@@ -736,7 +740,7 @@ function shouldTakeBreak(form: FormValue, now: number = null): boolean {
   return Math.abs(workTime) / (60 * 1000) > 75;
 }
 
-function createStartBlocks(form: FormValue): {}[] {
+function createStartBlocks(form: FormValue): object {
   const users = shuffle(form.users);
   const userOrder = users
     .map<string>((user, index) => `${index + 1}. <@${user}>`)
@@ -806,7 +810,7 @@ function createStartBlocks(form: FormValue): {}[] {
   ];
 }
 
-function createMobbingBlocks(form: FormValue): {}[] {
+function createMobbingBlocks(form: FormValue): object {
   const times = form.times ?? 0;
 
   return [
@@ -841,7 +845,7 @@ function createMobbingBlocks(form: FormValue): {}[] {
   ];
 }
 
-function createTurnEndActionBlock(form: FormValue): {} {
+function createTurnEndActionBlock(form: FormValue): object {
   const blocks: { type: string; elements: object[] } = {
     type: "actions",
     elements: [
@@ -900,7 +904,7 @@ function convertTimes(times?: number): string {
   }
 }
 
-function createMobedBlocks(form: FormValue): {}[] {
+function createMobedBlocks(form: FormValue): object {
   let times = form.times ?? 0;
   // next times
   times++;
@@ -995,7 +999,7 @@ function createMobedBlocks(form: FormValue): {}[] {
   ];
 }
 
-function createBreakBlocks(form: FormValue): {}[] {
+function createBreakBlocks(form: FormValue): object {
   const times = form.times ?? 0;
   const emoji = times % 2 === 0 ? ":+1:" : ":clap:";
 
@@ -1047,7 +1051,7 @@ function createBreakBlocks(form: FormValue): {}[] {
   ];
 }
 
-function createRestBlocks(form: FormValue): {}[] {
+function createRestBlocks(form: FormValue): object {
   const times = form.times ?? 0;
 
   return [
@@ -1157,7 +1161,7 @@ function countDown(parameter: {
   return true;
 }
 
-function createCountDownBlocks(form: FormValue): {}[] {
+function createCountDownBlocks(form: FormValue): object {
   const times = form.times ?? 0;
 
   return [
@@ -1182,7 +1186,7 @@ function createCountDownBlocks(form: FormValue): {}[] {
 function createConfirmChangeBlocks(
   form: FormValue,
   actionUser: { id: string; name: string }
-): {}[] {
+): object {
   return [
     {
       type: "context",
@@ -1248,7 +1252,7 @@ function createConfirmChangeBlocks(
   ];
 }
 
-function createRestartBlocks(form: FormValue): {}[] {
+function createRestartBlocks(form: FormValue): object {
   let times = form.times ?? 0;
   // next times
   times++;
