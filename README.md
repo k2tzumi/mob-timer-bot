@@ -22,13 +22,14 @@ See help.
 ```
 /mob
 ```
+Depending on the privileges of the user, the slash command may not be available, but the command can be substituted by sending a comment message to `@mobtimerbot`.
 
 
 REQUIREMENTS
 --------------------
-- `npm`
+- `npm` (`npx`)  
+This project uses the npx command that comes with npm version 5.2.0 or later. If you are using Node version 8.2 or lower, please install it with `npm install -g npx`.
 - [clasp](https://github.com/google/clasp)  
-`npm install -g @google/clasp`
 - `make`
 - GAS Library
   - [OAuth2](https://github.com/googleworkspace/apps-script-oauth2)
@@ -39,93 +40,29 @@ USAGE
 
 To use it, you need to set up Google apps scripts, and Slack API.
 
-### Install Google apps scripts
+## Steps
 
 1. Enable Google Apps Script API  
 https://script.google.com/home/usersettings
-2. make push  
-3. make deploy  
-4. Grant the necessary privileges  
-make open  
-Publish > Deploy as web app.. > Update  
-Grant access
+2. Clone this repository to your local machine.
+3. Run `make push` to install the dependencies and the necessary libraries, authenticate with Google, create a new GAS project and upload the code.
+4. Run `make deploy` to deploy the project as a web app.  
+The first time you publish it as a web application, you will need to authorize it, so please follow the steps below.
+Open the script editor. (`make open`)  
+Click Deploy > New deployment.  
+Select Web app as the deployment type.  
+Choose who can access your web app and who will execute it.  
+Click Deploy.  
+For more information, please refer to the official Google documentation.  
+https://developers.google.com/apps-script/concepts/deployments
+5. Run `make application` to open the deployed web app in your browser. Follow the instructions on the web app to install the Slack app and perform OAuth authentication. The web app will automatically upload the App manifest to Slack and configure the necessary settings for you.
 
-The URL of the current web app after deployment will be used as the request URL for the OAuth authentication screen and Slack message action.
+# How to use
 
-### Register with the Slack API
+The usage of this bot is as follows.
 
-* Create New App  
-https://api.slack.com/apps  
-Please make a note of `App Credentials` displayed after registration.
-
-### Setting Script properties
-
-In order to run the application and change its behavior, you need to set the following Google Apps scripts property.
-
-|Property name|Required|Setting Value|Description|
-|--|--|--|--|
-|VERIFICATION_TOKEN|○|Basic Information > App Credentials > Verification Token|A token that easily authenticates the source of a hooked request|
-|CLIENT_ID|○|Basic Information > App Credentials > Client ID|Use with OAuth|
-|CLIENT_SECRET|○|Basic Information > App Credentials > Client Secret|Use with OAuth|
-|COUNT_DOWN_NOTIFICATION_TIME||N minutes before the end of the mob|default `5` minutes.<br>min 1 minutes(Accept suspend time), max 360 minutes(Maximum cache retention time)|
-
-1. Open Project  
-`$ make open`
-2. Add Scirpt properties  
-File > Project properties > Scirpt properties > Add row  
-Setting Property & Value
-
-### OAuth Authentication
-
-#### Settings OAuth & Permissions
-
-* Redirect URLs  
-`Add New Redirect URL` > Add Redirect URL  > `Save URLs`  
-For example) https://script.google.com/macros/s/miserarenaiyo/usercallback  
-You can check the Redirect URL in the following way. The `RedirectUri` of the displayed page.  
-`$ make application`  
-* Bot Token Scopes  
-Click `Add an OAuth Scope` to select the following permissions  
-  * [chat:write](https://api.slack.com/scopes/chat:write)
-  * [commands](https://api.slack.com/scopes/commands)
-  * [channels:history](https://api.slack.com/scopes/channels:history)
-  * [groups:history](https://api.slack.com/scopes/groups:history)
-  * [mpim:history](https://api.slack.com/scopes/mpim:history)
-  * [im:history](https://api.slack.com/scopes/im:history)
-
-* Install App to Workspace  
-You must specify a destination channel that bot can post to as an app.
-
-### Install App to Workspace
-
-1. Open web application  
-`$ make application`  
-The browser will be launched with the following URL:  
-For example) https://script.google.com/macros/s/miserarenaiyo/exec  
-2. Click `Authorize.`  
-You must specify a destination channel that bot can post to as an app.
-3. Click `Allow`  
-The following message is displayed when OAuth authentication is successful  
-```
-Success!
-Setting EventSubscriptions
-Setting Slash Commands
-Setting Interactivity & Shortcuts
-```
-When prompted, click the `Setting Slash Commands` to set up an Slash Commands.  
-Thes click the `Setting Interactivity & Shortcuts` to set up an Interactivity.  
-
-### Setting Slack App
-
-Register the URL of the Google Apps script deployed as a web app as the request URL for each of the following items.  
-You can configure the settings from the link that appears after OAuth authentication.
-
-#### Settings Slash Commands
-
-* Create New Command  
-Setting Request URL.  
-
-#### Setting Interactivity & Shortcuts
-
-Turn on.  
-Setting Interactivity Request URL  
+1. Invite bots to your channel (e.g. /invite @mobtimerbot)
+2. Execute a slash command ( `/mob` ).  
+  - select users to join the mob
+  - please specify the time of the mob
+  - If you are satisfied with the order of the mob, press the `Start Mobbing` button
