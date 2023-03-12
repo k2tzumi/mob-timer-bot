@@ -5,7 +5,9 @@ import { Slack } from "./slack/types/index.d";
 import { SlackWebhooks } from "./SlackWebhooks";
 import { SlackApiClient } from "./SlackApiClient";
 import { SlashCommandFunctionResponse } from "./SlashCommandHandler";
-// import "apps-script-jobqueue";
+import "apps-script-jobqueue";
+import { SlackCredentialStore } from "./SlackCredentialStore";
+import { SlackConfigurator } from "./SlackConfigurator";
 
 type TextOutput = GoogleAppsScript.Content.TextOutput;
 type HtmlOutput = GoogleAppsScript.HTML.HtmlOutput;
@@ -17,11 +19,12 @@ type BlockActions = Slack.Interactivity.BlockActions;
 type StaticSelectAction = Slack.Interactivity.StaticSelectAction;
 type ButtonAction = Slack.Interactivity.ButtonAction;
 type InteractionResponse = Slack.Interactivity.InteractionResponse;
+type AppsManifest = Slack.Tools.AppsManifest;
+type Parameter = AppsScriptJobqueue.Parameter;
+type TimeBasedEvent = AppsScriptJobqueue.TimeBasedEvent;
 
 const properties = PropertiesService.getScriptProperties();
 
-const CLIENT_ID: string = properties.getProperty("CLIENT_ID") || "";
-const CLIENT_SECRET: string = properties.getProperty("CLIENT_SECRET") || "";
 let handler: OAuth2Handler;
 
 const handleCallback = (request): HtmlOutput => {
@@ -29,10 +32,17 @@ const handleCallback = (request): HtmlOutput => {
   return handler.authCallback(request);
 };
 
+function jobEventHandler(event: TimeBasedEvent): void {
+  JobBroker.consumeJob(event, globalThis);
+}
+
 function initializeOAuth2Handler(): void {
+  const properties = PropertiesService.getScriptProperties();
+  const slackCredentialStore = new SlackCredentialStore(properties);
+  const credential = slackCredentialStore.getCredential();
+
   handler = new OAuth2Handler(
-    CLIENT_ID,
-    CLIENT_SECRET,
+    credential,
     PropertiesService.getUserProperties(),
     handleCallback.name
   );
@@ -47,37 +57,149 @@ function doGet(request: DoGet): HtmlOutput {
   // Clear authentication by accessing with the get parameter `?logout=true`
   if (request.parameter.hasOwnProperty("logout")) {
     handler.clearService();
+    const properties = PropertiesService.getScriptProperties();
+    const slackCredentialStore = new SlackCredentialStore(properties);
+    slackCredentialStore.removeCredential();
+    const slackConfigurator = new SlackConfigurator();
+    slackConfigurator.deleteApps();
+
     const template = HtmlService.createTemplate(
-      'Logout<br /><a href="<?= requestUrl ?>" target="_blank">refresh</a>.'
+      'Logout<br /><a href="<?= requestUrl ?>" target="_parent">refresh</a>.'
     );
-    template.requestUrl = handler.requestURL;
+    template.requestUrl = ScriptApp.getService().getUrl();
     return HtmlService.createHtmlOutput(template.evaluate());
+  }
+  // Reinstall the Slack app by accessing it with the get parameter `?reinstall=true`
+  if (request.parameter.hasOwnProperty("reinstall")) {
+    const slackConfigurator = new SlackConfigurator();
+    const permissionsUpdated = slackConfigurator.updateApps(
+      createAppsManifest([handler.callbackURL], handler.requestURL)
+    );
+
+    let template: HtmlTemplate;
+    if (permissionsUpdated) {
+      template = HtmlService.createTemplate(
+        `You’ve changed the permission scopes your app uses. Please <a href="<?= reInstallUrl ?>" target="_parent">reinstall your app</a> for these changes to take effect.`
+      );
+      template.reInstallUrl = handler.reInstallUrl;
+    } else {
+      template = HtmlService.createTemplate(
+        `Reinstallation is complete.<br /><a href="<?= requestUrl ?>" target="_parent">refresh</a>.`
+      );
+      template.requestUrl = ScriptApp.getService().getUrl();
+    }
+    return HtmlService.createHtmlOutput(template.evaluate()).setTitle("");
   }
 
   if (handler.verifyAccessToken()) {
-    return HtmlService.createHtmlOutput("OK");
+    const template = HtmlService.createTemplate(
+      "OK!<br />" +
+        '<a href="<?!= reInstallUrl ?>" target="_parent" style="align-items:center;color:#000;background-color:#fff;border:1px solid #ddd;border-radius:4px;display:inline-flex;font-family:Lato, sans-serif;font-size:16px;font-weight:600;height:48px;justify-content:center;text-decoration:none;width:236px"><svg xmlns="http://www.w3.org/2000/svg" style="height:20px;width:20px;margin-right:12px" viewBox="0 0 122.8 122.8"><path d="M25.8 77.6c0 7.1-5.8 12.9-12.9 12.9S0 84.7 0 77.6s5.8-12.9 12.9-12.9h12.9v12.9zm6.5 0c0-7.1 5.8-12.9 12.9-12.9s12.9 5.8 12.9 12.9v32.3c0 7.1-5.8 12.9-12.9 12.9s-12.9-5.8-12.9-12.9V77.6z" fill="#e01e5a"></path><path d="M45.2 25.8c-7.1 0-12.9-5.8-12.9-12.9S38.1 0 45.2 0s12.9 5.8 12.9 12.9v12.9H45.2zm0 6.5c7.1 0 12.9 5.8 12.9 12.9s-5.8 12.9-12.9 12.9H12.9C5.8 58.1 0 52.3 0 45.2s5.8-12.9 12.9-12.9h32.3z" fill="#36c5f0"></path><path d="M97 45.2c0-7.1 5.8-12.9 12.9-12.9s12.9 5.8 12.9 12.9-5.8 12.9-12.9 12.9H97V45.2zm-6.5 0c0 7.1-5.8 12.9-12.9 12.9s-12.9-5.8-12.9-12.9V12.9C64.7 5.8 70.5 0 77.6 0s12.9 5.8 12.9 12.9v32.3z" fill="#2eb67d"></path><path d="M77.6 97c7.1 0 12.9 5.8 12.9 12.9s-5.8 12.9-12.9 12.9-12.9-5.8-12.9-12.9V97h12.9zm0-6.5c-7.1 0-12.9-5.8-12.9-12.9s5.8-12.9 12.9-12.9h32.3c7.1 0 12.9 5.8 12.9 12.9s-5.8 12.9-12.9 12.9H77.6z" fill="#ecb22e"></path></svg>Reinstall to Slack</a>'
+    );
+    template.reInstallUrl = handler.requestURL + "?reinstall=true";
+    return HtmlService.createHtmlOutput(template.evaluate()).setTitle(
+      "Installation on Slack is complete"
+    );
+  }
+  if (request.parameter.hasOwnProperty("token")) {
+    return configuration(request.parameter);
   } else {
     const template = HtmlService.createTemplate(
-      'RedirectUri:<?= redirectUrl ?> <br /><a href="<?= authorizationUrl ?>" target="_blank">Authorize</a>.'
+      '<a href="https://api.slack.com/authentication/config-tokens#creating" target="_blank">Create configuration token</a><br />' +
+        '<form action="<?!= requestURL ?>" method="get" target="_parent"><p>Configuration Tokens(Refresh Token):<input type="password" name="token" value="<?!= refreshToken ?>"></p><input type="submit" name="" value="Create App"></form>'
     );
-    template.authorizationUrl = handler.authorizationUrl;
-    template.redirectUrl = handler.redirectUri;
-    return HtmlService.createHtmlOutput(template.evaluate());
+    template.requestURL = handler.requestURL;
+    template.refreshToken = new SlackConfigurator().refresh_token;
+    return HtmlService.createHtmlOutput(template.evaluate()).setTitle(
+      "Start Slack application configuration."
+    );
   }
 }
 
-const asyncLogging = (): void => {
-  JobBroker.consumeAsyncJob((parameter: Record<string, any>) => {
-    console.info(JSON.stringify(parameter));
-  }, "asyncLogging");
-};
+function configuration(data: { [key: string]: string }): HtmlOutput {
+  const slackConfigurator = new SlackConfigurator(data.token);
+  const credentail = slackConfigurator.createApps(createAppsManifest());
+  const properties = PropertiesService.getScriptProperties();
+  const slackCredentialStore = new SlackCredentialStore(properties);
 
-const VERIFICATION_TOKEN: string = properties.getProperty("VERIFICATION_TOKEN");
+  slackCredentialStore.setCredential(credentail);
+
+  const oAuth2Handler = new OAuth2Handler(
+    credentail,
+    PropertiesService.getUserProperties(),
+    handleCallback.name
+  );
+
+  slackConfigurator.updateApps(
+    createAppsManifest([oAuth2Handler.callbackURL], oAuth2Handler.requestURL)
+  );
+
+  const template = HtmlService.createTemplate(
+    '<a href="<?!= installUrl ?>" target="_parent" style="align-items:center;color:#000;background-color:#fff;border:1px solid #ddd;border-radius:4px;display:inline-flex;font-family:Lato, sans-serif;font-size:16px;font-weight:600;height:48px;justify-content:center;text-decoration:none;width:236px"><svg xmlns="http://www.w3.org/2000/svg" style="height:20px;width:20px;margin-right:12px" viewBox="0 0 122.8 122.8"><path d="M25.8 77.6c0 7.1-5.8 12.9-12.9 12.9S0 84.7 0 77.6s5.8-12.9 12.9-12.9h12.9v12.9zm6.5 0c0-7.1 5.8-12.9 12.9-12.9s12.9 5.8 12.9 12.9v32.3c0 7.1-5.8 12.9-12.9 12.9s-12.9-5.8-12.9-12.9V77.6z" fill="#e01e5a"></path><path d="M45.2 25.8c-7.1 0-12.9-5.8-12.9-12.9S38.1 0 45.2 0s12.9 5.8 12.9 12.9v12.9H45.2zm0 6.5c7.1 0 12.9 5.8 12.9 12.9s-5.8 12.9-12.9 12.9H12.9C5.8 58.1 0 52.3 0 45.2s5.8-12.9 12.9-12.9h32.3z" fill="#36c5f0"></path><path d="M97 45.2c0-7.1 5.8-12.9 12.9-12.9s12.9 5.8 12.9 12.9-5.8 12.9-12.9 12.9H97V45.2zm-6.5 0c0 7.1-5.8 12.9-12.9 12.9s-12.9-5.8-12.9-12.9V12.9C64.7 5.8 70.5 0 77.6 0s12.9 5.8 12.9 12.9v32.3z" fill="#2eb67d"></path><path d="M77.6 97c7.1 0 12.9 5.8 12.9 12.9s-5.8 12.9-12.9 12.9-12.9-5.8-12.9-12.9V97h12.9zm0-6.5c-7.1 0-12.9-5.8-12.9-12.9s5.8-12.9 12.9-12.9h32.3c7.1 0 12.9 5.8 12.9 12.9s-5.8 12.9-12.9 12.9H77.6z" fill="#ecb22e"></path></svg>Add to Slack</a>'
+  );
+  template.installUrl = oAuth2Handler.installUrl;
+
+  return HtmlService.createHtmlOutput(template.evaluate()).setTitle(
+    "Slack application configuration is complete."
+  );
+}
+
+function createAppsManifest(
+  redirectUrls: string[] = [],
+  requestUrl = ""
+): AppsManifest {
+  const appsManifest = {
+    display_information: {
+      name: "mob-timer-bot",
+    },
+  } as AppsManifest;
+
+  if (redirectUrls.length !== 0 && requestUrl !== "") {
+    appsManifest.features = {
+      bot_user: {
+        display_name: "mobtimerbot",
+        always_online: false,
+      },
+      slash_commands: [
+        {
+          command: "/mob",
+          url: requestUrl,
+          description: "Mob programming timer",
+          usage_hint: "[n minitues][@user1 @user2]",
+          should_escape: false,
+        },
+      ],
+    };
+
+    appsManifest.oauth_config = {
+      redirect_urls: redirectUrls,
+      scopes: {
+        bot: OAuth2Handler.SCOPE.split(","),
+      },
+    };
+
+    appsManifest.settings = {
+      interactivity: {
+        is_enabled: true,
+        request_url: requestUrl,
+      },
+    };
+  }
+
+  return appsManifest;
+}
+
+function asyncLogging(parameter: Parameter): boolean {
+  console.info(JSON.stringify(parameter));
+  return true;
+}
 
 function doPost(e: DoPost): TextOutput {
   initializeOAuth2Handler();
-
-  const slackHandler = new SlackHandler(VERIFICATION_TOKEN);
+  const properties = PropertiesService.getScriptProperties();
+  const slackCredentialStore = new SlackCredentialStore(properties);
+  const credentail = slackCredentialStore.getCredential();
+  const slackHandler = new SlackHandler(credentail.verification_token);
 
   slackHandler.addCommandListener(
     e.parameter.command ?? "command",
@@ -100,7 +222,7 @@ function doPost(e: DoPost): TextOutput {
     if (exception instanceof DuplicateEventError) {
       return ContentService.createTextOutput();
     } else {
-      JobBroker.enqueueAsyncJob(asyncLogging, {
+      JobBroker.enqueueAsyncJob<Parameter>(asyncLogging, {
         message: exception.message,
         stack: exception.stack,
       });
@@ -516,7 +638,11 @@ const executeButton = (blockActions: BlockActions): {} => {
         countDownTime.getMinutes() - COUNT_DOWN_NOTIFICATION_TIME
       );
       if (countDownTime.getTime() > Date.now()) {
-        JobBroker.createDelaydJob(countDownTime).performLater(countDown, {
+        JobBroker.createDelaydJob<{
+          channel: string;
+          ts: string;
+          form: FormValue;
+        }>(countDownTime).performLater(countDown, {
           channel,
           ts,
           form,
@@ -1001,38 +1127,35 @@ function createFinishMessage(form: FormValue): string {
   )} :confetti_ball:`;
 }
 
-const countDown = (): void => {
+function countDown(parameter: {
+  channel: string;
+  ts: string;
+  form: FormValue;
+}): boolean {
   initializeOAuth2Handler();
-  JobBroker.perform(
-    (
-      parameter:
-        | { channel: string; ts: string; form: FormValue }
-        | Record<string, any>
-    ) => {
-      const { channel, ts, form } = parameter;
+  const { channel, ts, form } = parameter;
 
-      const client = new SlackApiClient(handler.token);
+  const client = new SlackApiClient(handler.token);
 
-      const messages = client.conversationsHistory(channel, ts, 1, ts);
+  const messages = client.conversationsHistory(channel, ts, 1, ts);
 
-      const blocks = messages[0].blocks;
-      const block = blocks.pop();
+  const blocks = messages[0].blocks;
+  const block = blocks.pop();
 
-      // Exists action button
-      if (block.type === "actions") {
-        client.chatUpdate(channel, ts, null, blocks);
-        client.chatPostMessage(
-          channel,
-          null,
-          null,
-          null,
-          createCountDownBlocks(form)
-        );
-      }
-    },
-    "countDown"
-  );
-};
+  // Exists action button
+  if (block.type === "actions") {
+    client.chatUpdate(channel, ts, null, blocks);
+    client.chatPostMessage(
+      channel,
+      null,
+      null,
+      null,
+      createCountDownBlocks(form)
+    );
+  }
+
+  return true;
+}
 
 function createCountDownBlocks(form: FormValue): {}[] {
   const times = form.times ?? 0;
@@ -1221,4 +1344,11 @@ function pickUser(users: string[], times: number) {
   return `<@${user}>`;
 }
 
-export { executeSlashCommand, changeOrder, FormValue };
+export {
+  executeSlashCommand,
+  changeOrder,
+  FormValue,
+  doGet,
+  doPost,
+  jobEventHandler,
+};
