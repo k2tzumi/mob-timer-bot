@@ -1,5 +1,9 @@
 # Changelog
 
+## [v0.0.3](https://github.com/k2tzumi/mob-timer-bot/compare/v0.0.2...v0.0.3) - 2023-03-12
+### Other Changes
+- Refactor settings. by @k2tzumi in https://github.com/k2tzumi/mob-timer-bot/pull/25
+
 ## [v0.0.2](https://github.com/k2tzumi/mob-timer-bot/compare/v0.0.1...v0.0.2) - 2023-03-12
 ### Other Changes
 - Bump up version library by @k2tzumi in https://github.com/k2tzumi/mob-timer-bot/pull/23
