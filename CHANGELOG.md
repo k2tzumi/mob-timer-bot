@@ -1,5 +1,14 @@
 # Changelog
 
+## [v0.0.5](https://github.com/k2tzumi/mob-timer-bot/compare/v0.0.4...v0.0.5) - 2023-03-12
+### Other Changes
+- Append trigger by @k2tzumi in https://github.com/k2tzumi/mob-timer-bot/pull/30
+- Fixing `TypeError: Cannot read properties of undefined (reading 'length')` by @k2tzumi in https://github.com/k2tzumi/mob-timer-bot/pull/32
+- The module simple-git is imported by default by @k2tzumi in https://github.com/k2tzumi/mob-timer-bot/pull/33
+- Install simple-git by @k2tzumi in https://github.com/k2tzumi/mob-timer-bot/pull/34
+- Fixing `TypeError: git.addConfig is not a function` by @k2tzumi in https://github.com/k2tzumi/mob-timer-bot/pull/35
+- Enable push.autoSetupRemote by @k2tzumi in https://github.com/k2tzumi/mob-timer-bot/pull/36
+
 ## [v0.0.4](https://github.com/k2tzumi/mob-timer-bot/compare/v0.0.3...v0.0.4) - 2023-03-12
 ### Other Changes
 - Support for command invocation by app_mention by @k2tzumi in https://github.com/k2tzumi/mob-timer-bot/pull/27
