@@ -34,7 +34,7 @@ jobs:
 
             if (pullRequests.length > 0) {
               const pullRequest = pullRequests[0];
-              const git = require('simple-git')();
+              const git = simpleGit();
   
               await git.addConfig('user.name', 'GitHub Actions');
               await git.addConfig('user.email', 'actions@github.com');
