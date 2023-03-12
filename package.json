@@ -35,6 +35,7 @@
     "shebang-regex": "^4.0.0",
     "slash": "^5.0.0",
     "ts-jest": "^29.0.5",
-    "typescript": "^4.9.5"
+    "typescript": "^4.9.5",
+    "resolve-cwd": "^3.0.0"
   }
 }
