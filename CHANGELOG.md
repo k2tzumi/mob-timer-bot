@@ -1,5 +1,9 @@
 # Changelog
 
+## [v0.0.6](https://github.com/k2tzumi/mob-timer-bot/compare/v0.0.5...v0.0.6) - 2024-12-18
+### Other Changes
+- Bump word-wrap from 1.2.3 to 1.2.4 by @dependabot in https://github.com/k2tzumi/mob-timer-bot/pull/37
+
 ## [v0.0.5](https://github.com/k2tzumi/mob-timer-bot/compare/v0.0.4...v0.0.5) - 2023-03-12
 ### Other Changes
 - Append trigger by @k2tzumi in https://github.com/k2tzumi/mob-timer-bot/pull/30
