@@ -51,9 +51,7 @@ declare namespace Slack {
         values: any;
       };
       response_url?: string;
-      actions: [
-        ButtonAction | MultiUsersSelectAction | StaticSelectAction | ActionBase
-      ];
+      actions: [ButtonAction | MultiUsersSelectAction | StaticSelectAction | ActionBase];
     }
     interface ViewSubmission extends Interaction {
       view: {

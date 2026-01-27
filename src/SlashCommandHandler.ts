@@ -10,9 +10,7 @@ interface SlashCommandFunctionResponse {
   text?: string;
   blocks?: object;
 }
-type SlashCommandFunction = (
-  commands: Commands
-) => SlashCommandFunctionResponse;
+type SlashCommandFunction = (commands: Commands) => SlashCommandFunctionResponse;
 
 class SlashCommandHandler extends SlackBaseHandler<SlashCommandFunction> {
   public handle(e: DoPost): { performed: boolean; output: TextOutput | null } {
@@ -43,14 +41,8 @@ class SlashCommandHandler extends SlackBaseHandler<SlashCommandFunction> {
       return listner(commands);
     }
 
-    throw new Error(
-      `Unknow Slash command. command: ${JSON.stringify(command)}`
-    );
+    throw new Error(`Unknow Slash command. command: ${JSON.stringify(command)}`);
   }
 }
 
-export {
-  SlashCommandHandler,
-  SlashCommandFunction,
-  SlashCommandFunctionResponse,
-};
+export { SlashCommandHandler, SlashCommandFunction, SlashCommandFunctionResponse };

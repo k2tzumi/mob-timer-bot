@@ -145,10 +145,7 @@ function configuration(data: { [key: string]: string }): HtmlOutput {
   );
 }
 
-function createAppsManifest(
-  redirectUrls: string[] = [],
-  requestUrl = ""
-): AppsManifest {
+function createAppsManifest(redirectUrls: string[] = [], requestUrl = ""): AppsManifest {
   const appsManifest = {
     display_information: {
       name: "mob-timer-bot",
@@ -206,14 +203,8 @@ function doPost(e: DoPost): TextOutput {
   const credentail = slackCredentialStore.getCredential();
   const slackHandler = new SlackHandler(credentail.verification_token);
 
-  slackHandler.addCommandListener(
-    e.parameter.command ?? "command",
-    executeSlashCommand
-  );
-  slackHandler.addInteractivityListener(
-    "multi_users_select",
-    executeMultiUserSelect
-  );
+  slackHandler.addCommandListener(e.parameter.command ?? "command", executeSlashCommand);
+  slackHandler.addInteractivityListener("multi_users_select", executeMultiUserSelect);
   slackHandler.addInteractivityListener("static_select", executeStaticSelect);
   slackHandler.addInteractivityListener("button", executeButton);
   slackHandler.addCallbackEventListener("app_mention", executeAppMentionEvent);
@@ -239,11 +230,8 @@ function doPost(e: DoPost): TextOutput {
   throw new Error(`No performed handler, request: ${JSON.stringify(e)}`);
 }
 
-const executeSlashCommand = (
-  commands: Commands
-): SlashCommandFunctionResponse => {
-  const response: SlashCommandFunctionResponse =
-    {} as SlashCommandFunctionResponse;
+const executeSlashCommand = (commands: Commands): SlashCommandFunctionResponse => {
+  const response: SlashCommandFunctionResponse = {} as SlashCommandFunctionResponse;
 
   if (commands.text) {
     const parameters = commands.text.split(" ");
@@ -321,9 +309,7 @@ function createSelectUserBlocks(user_id: string): Record<never, never>[] {
   ];
 }
 
-const executeMultiUserSelect = (
-  blockActions: BlockActions
-): Record<never, never> => {
+const executeMultiUserSelect = (blockActions: BlockActions): Record<never, never> => {
   const action = blockActions.actions[0] as MultiUsersSelectAction;
 
   const webhook = new SlackWebhooks(blockActions.response_url);
@@ -332,9 +318,7 @@ const executeMultiUserSelect = (
     blocks: createSelectTimerBlocks(action.selected_users),
   };
   if (!webhook.invoke(response)) {
-    throw new Error(
-      `executeMultiUserSelect faild. event: ${JSON.stringify(blockActions)}`
-    );
+    throw new Error(`executeMultiUserSelect faild. event: ${JSON.stringify(blockActions)}`);
   }
 
   return {};
@@ -468,9 +452,7 @@ function createFormValue(
   return JSON.stringify(form);
 }
 
-const executeStaticSelect = (
-  blockActions: BlockActions
-): Record<never, never> => {
+const executeStaticSelect = (blockActions: BlockActions): Record<never, never> => {
   const action = blockActions.actions[0] as StaticSelectAction;
 
   const webhook = new SlackWebhooks(blockActions.response_url);
@@ -480,9 +462,7 @@ const executeStaticSelect = (
   };
 
   if (!webhook.invoke(response)) {
-    throw new Error(
-      `executeStaticSelect faild. event: ${JSON.stringify(blockActions)}`
-    );
+    throw new Error(`executeStaticSelect faild. event: ${JSON.stringify(blockActions)}`);
   }
 
   return {};
@@ -497,9 +477,7 @@ function createConfirmBlocks(form: FormValue): object {
           type: "mrkdwn",
           text: `:one: Pick users from the list. :white_check_mark:\n${createSelectUserList(
             form.users
-          )}\nselected.\n:two: Select an time :white_check_mark:.\n${
-            form.time
-          } minutes selected.`,
+          )}\nselected.\n:two: Select an time :white_check_mark:.\n${form.time} minutes selected.`,
         },
       ],
     },
@@ -512,15 +490,7 @@ function createConfirmBlocks(form: FormValue): object {
             type: "plain_text",
             text: "Shuffle Start :game_die:",
           },
-          value: createFormValue(
-            form.users,
-            form.time,
-            null,
-            null,
-            null,
-            null,
-            form.start_time
-          ),
+          value: createFormValue(form.users, form.time, null, null, null, null, form.start_time),
           style: "primary",
           action_id: "shuffle",
         },
@@ -530,15 +500,7 @@ function createConfirmBlocks(form: FormValue): object {
             type: "plain_text",
             text: "Nomal Start :motorway:",
           },
-          value: createFormValue(
-            form.users,
-            form.time,
-            null,
-            0,
-            null,
-            null,
-            form.start_time
-          ),
+          value: createFormValue(form.users, form.time, null, 0, null, null, form.start_time),
           style: "primary",
           action_id: "start",
         },
@@ -579,13 +541,7 @@ const executeButton = (blockActions: BlockActions): Record<never, never> => {
     case "shuffle": {
       webhook.invoke({ replace_original: "true", blocks });
 
-      client.chatPostMessage(
-        channel,
-        null,
-        null,
-        null,
-        createStartBlocks(form)
-      );
+      client.chatPostMessage(channel, null, null, null, createStartBlocks(form));
       return {};
     }
     case "reshuffle":
@@ -597,12 +553,7 @@ const executeButton = (blockActions: BlockActions): Record<never, never> => {
     case "continue": {
       const currentUser = form.users[form.times % form.users.length];
       // other user takes an action
-      if (
-        !(
-          currentUser === blockActions.user.id ||
-          currentUser === blockActions.user.name
-        )
-      ) {
+      if (!(currentUser === blockActions.user.id || currentUser === blockActions.user.name)) {
         client.chatPostMessage(
           channel,
           null,
@@ -639,25 +590,15 @@ const executeButton = (blockActions: BlockActions): Record<never, never> => {
         channel,
         endTime,
         null,
-        shouldTakeBreak(form, form.finish_at)
-          ? createBreakBlocks(form)
-          : createMobedBlocks(form)
+        shouldTakeBreak(form, form.finish_at) ? createBreakBlocks(form) : createMobedBlocks(form)
       );
 
-      const ts = client.chatPostMessage(
-        channel,
-        null,
-        null,
-        null,
-        createMobbingBlocks(form)
-      );
+      const ts = client.chatPostMessage(channel, null, null, null, createMobbingBlocks(form));
 
       // Create count down job
       const countDownTime = new Date(endTime);
       // Set end time
-      countDownTime.setMinutes(
-        countDownTime.getMinutes() - COUNT_DOWN_NOTIFICATION_TIME
-      );
+      countDownTime.setMinutes(countDownTime.getMinutes() - COUNT_DOWN_NOTIFICATION_TIME);
       if (countDownTime.getTime() > Date.now()) {
         JobBroker.createDelaydJob<{
           channel: string;
@@ -674,14 +615,9 @@ const executeButton = (blockActions: BlockActions): Record<never, never> => {
     }
     case "turn_end": {
       webhook.invoke({ replace_original: "true", blocks });
-      if (
-        !client.chatDeleteScheduleMessage(channel, form.scheduled_message_id)
-      ) {
+      if (!client.chatDeleteScheduleMessage(channel, form.scheduled_message_id)) {
         if (form.finish_at > Date.now()) {
-          client.chatPostMessage(
-            channel,
-            "Please wait for a moment to finish."
-          );
+          client.chatPostMessage(channel, "Please wait for a moment to finish.");
         }
         return {};
       }
@@ -691,9 +627,7 @@ const executeButton = (blockActions: BlockActions): Record<never, never> => {
         null,
         null,
         null,
-        shouldTakeBreak(form)
-          ? createBreakBlocks(form)
-          : createMobedBlocks(form)
+        shouldTakeBreak(form) ? createBreakBlocks(form) : createMobedBlocks(form)
       );
 
       return {};
@@ -704,26 +638,15 @@ const executeButton = (blockActions: BlockActions): Record<never, never> => {
       // Set start time
       form.start_time = new Date().getTime();
 
-      client.chatPostMessage(
-        channel,
-        null,
-        null,
-        null,
-        createRestartBlocks(form)
-      );
+      client.chatPostMessage(channel, null, null, null, createRestartBlocks(form));
 
       return {};
     }
     case "break": {
       webhook.invoke({ replace_original: "true", blocks });
-      if (
-        !client.chatDeleteScheduleMessage(channel, form.scheduled_message_id)
-      ) {
+      if (!client.chatDeleteScheduleMessage(channel, form.scheduled_message_id)) {
         if (form.finish_at > Date.now()) {
-          client.chatPostMessage(
-            channel,
-            "Please wait for a moment to finish."
-          );
+          client.chatPostMessage(channel, "Please wait for a moment to finish.");
         }
         return {};
       }
@@ -742,9 +665,7 @@ const executeButton = (blockActions: BlockActions): Record<never, never> => {
   }
 
   if (!webhook.invoke(response)) {
-    throw new Error(
-      `executeButton faild. event: ${JSON.stringify(blockActions)}`
-    );
+    throw new Error(`executeButton faild. event: ${JSON.stringify(blockActions)}`);
   }
 
   return {};
@@ -759,9 +680,7 @@ function shouldTakeBreak(form: FormValue, now: number = null): boolean {
 
 function createStartBlocks(form: FormValue): object {
   const users = shuffle(form.users);
-  const userOrder = users
-    .map<string>((user, index) => `${index + 1}. <@${user}>`)
-    .join(", ");
+  const userOrder = users.map<string>((user, index) => `${index + 1}. <@${user}>`).join(", ");
 
   form.users = users;
 
@@ -784,15 +703,7 @@ function createStartBlocks(form: FormValue): object {
             type: "plain_text",
             text: "Start Mobbing :motorway:",
           },
-          value: createFormValue(
-            form.users,
-            form.time,
-            null,
-            0,
-            null,
-            null,
-            form.start_time
-          ),
+          value: createFormValue(form.users, form.time, null, 0, null, null, form.start_time),
           style: "primary",
           action_id: "start",
         },
@@ -802,15 +713,7 @@ function createStartBlocks(form: FormValue): object {
             type: "plain_text",
             text: "One more :game_die:",
           },
-          value: createFormValue(
-            form.users,
-            form.time,
-            null,
-            null,
-            null,
-            null,
-            form.start_time
-          ),
+          value: createFormValue(form.users, form.time, null, null, null, null, form.start_time),
           action_id: "reshuffle",
         },
         {
@@ -933,10 +836,7 @@ function createMobedBlocks(form: FormValue): object {
       elements: [
         {
           type: "mrkdwn",
-          text: `:alarm_clock: Thank you ${pickUser(
-            form.users,
-            times - 1
-          )}${emoji}`,
+          text: `:alarm_clock: Thank you ${pickUser(form.users, times - 1)}${emoji}`,
         },
       ],
     },
@@ -963,15 +863,7 @@ function createMobedBlocks(form: FormValue): object {
             type: "plain_text",
             text: "Continue :raised_hands:",
           },
-          value: createFormValue(
-            form.users,
-            form.time,
-            null,
-            times,
-            null,
-            null,
-            form.start_time
-          ),
+          value: createFormValue(form.users, form.time, null, times, null, null, form.start_time),
           style: "primary",
           action_id: "continue",
         },
@@ -981,15 +873,7 @@ function createMobedBlocks(form: FormValue): object {
             type: "plain_text",
             text: "Finish :checkered_flag:",
           },
-          value: createFormValue(
-            form.users,
-            form.time,
-            null,
-            times,
-            null,
-            null,
-            form.start_time
-          ),
+          value: createFormValue(form.users, form.time, null, times, null, null, form.start_time),
           style: "danger",
           confirm: {
             title: {
@@ -1026,10 +910,7 @@ function createBreakBlocks(form: FormValue): object {
       elements: [
         {
           type: "mrkdwn",
-          text: `:alarm_clock: Thank you ${pickUser(
-            form.users,
-            times
-          )}${emoji}`,
+          text: `:alarm_clock: Thank you ${pickUser(form.users, times)}${emoji}`,
         },
       ],
     },
@@ -1051,15 +932,7 @@ function createBreakBlocks(form: FormValue): object {
             type: "plain_text",
             text: "Rested enough :relaxed:",
           },
-          value: createFormValue(
-            form.users,
-            form.time,
-            null,
-            times,
-            null,
-            null,
-            null
-          ),
+          value: createFormValue(form.users, form.time, null, times, null, null, null),
           style: "primary",
           action_id: "rested",
         },
@@ -1094,9 +967,7 @@ function createRestBlocks(form: FormValue): object {
           )}), :world_map: Navigator(${pickUser(
             form.users,
             times + 1
-          )})\nActive time remaining is ${convertRemingTime(
-            form.remaining_time
-          )}`,
+          )})\nActive time remaining is ${convertRemingTime(form.remaining_time)}`,
         },
       ],
     },
@@ -1143,16 +1014,10 @@ function createFinishMessage(form: FormValue): string {
     message = `:trophy: ${form.times} mobs completed.\n`;
   }
 
-  return `${message}Thank you for everything. ${createSelectUserList(
-    form.users
-  )} :confetti_ball:`;
+  return `${message}Thank you for everything. ${createSelectUserList(form.users)} :confetti_ball:`;
 }
 
-function countDown(parameter: {
-  channel: string;
-  ts: string;
-  form: FormValue;
-}): boolean {
+function countDown(parameter: { channel: string; ts: string; form: FormValue }): boolean {
   initializeOAuth2Handler();
   const { channel, ts, form } = parameter;
 
@@ -1166,13 +1031,7 @@ function countDown(parameter: {
   // Exists action button
   if (block.type === "actions") {
     client.chatUpdate(channel, ts, null, blocks);
-    client.chatPostMessage(
-      channel,
-      null,
-      null,
-      null,
-      createCountDownBlocks(form)
-    );
+    client.chatPostMessage(channel, null, null, null, createCountDownBlocks(form));
 
     return true;
   } else {
@@ -1191,10 +1050,7 @@ function createCountDownBlocks(form: FormValue): object {
       elements: [
         {
           type: "mrkdwn",
-          text: `:hourglass_flowing_sand: Hey, ${pickUser(
-            form.users,
-            times
-          )}. ${convertTimes(
+          text: `:hourglass_flowing_sand: Hey, ${pickUser(form.users, times)}. ${convertTimes(
             times
           )} mob will finish in ${COUNT_DOWN_NOTIFICATION_TIME} minutes.`,
         },
@@ -1289,10 +1145,7 @@ function createRestartBlocks(form: FormValue): object {
           )} mob. :man-woman-boy:\n pair :oncoming_automobile: Driver(${pickUser(
             form.users,
             times
-          )}), :world_map: Navigater(${pickUser(
-            form.users,
-            times + 1
-          )}).\nReady to go?`,
+          )}), :world_map: Navigater(${pickUser(form.users, times + 1)}).\nReady to go?`,
         },
       ],
     },
@@ -1305,15 +1158,7 @@ function createRestartBlocks(form: FormValue): object {
             type: "plain_text",
             text: "I'm all set :ok_hand:",
           },
-          value: createFormValue(
-            form.users,
-            form.time,
-            null,
-            times,
-            null,
-            null,
-            null
-          ),
+          value: createFormValue(form.users, form.time, null, times, null, null, null),
           style: "primary",
           action_id: "restart",
         },
@@ -1322,10 +1167,7 @@ function createRestartBlocks(form: FormValue): object {
   ];
 }
 
-function changeOrder(
-  form: FormValue,
-  actionUser: { id: string; name: string }
-): string[] {
+function changeOrder(form: FormValue, actionUser: { id: string; name: string }): string[] {
   const users = [...form.users];
   const swapIndex = getUserIndex(form, actionUser);
 
@@ -1342,10 +1184,7 @@ function changeOrder(
   return users;
 }
 
-function getUserIndex(
-  form: FormValue,
-  actionUser: { id: string; name: string }
-): number {
+function getUserIndex(form: FormValue, actionUser: { id: string; name: string }): number {
   const users = [...form.users];
   const swapIndex = users.indexOf(actionUser.id);
 
@@ -1369,11 +1208,4 @@ function pickUser(users: string[], times: number) {
   return `<@${user}>`;
 }
 
-export {
-  executeSlashCommand,
-  changeOrder,
-  FormValue,
-  doGet,
-  doPost,
-  jobEventHandler,
-};
+export { executeSlashCommand, changeOrder, FormValue, doGet, doPost, jobEventHandler };

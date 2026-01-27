@@ -6,9 +6,7 @@ type TextOutput = GoogleAppsScript.Content.TextOutput;
 type CallbackEvent = Slack.CallbackEvent.EventBase;
 type DoPost = GoogleAppsScript.Events.DoPost;
 
-type CallbackEventFunction = (
-  event: CallbackEvent
-) => Record<never, never> | null | void;
+type CallbackEventFunction = (event: CallbackEvent) => Record<never, never> | null | void;
 
 interface OuterEvent {
   token: string;
@@ -73,9 +71,7 @@ class CallbackEventHandler extends SlackBaseHandler<CallbackEventFunction> {
       };
     }
 
-    throw new Error(
-      `Undifine event type listner. event: ${JSON.stringify(outerEvent)}`
-    );
+    throw new Error(`Undifine event type listner. event: ${JSON.stringify(outerEvent)}`);
   }
 }
 

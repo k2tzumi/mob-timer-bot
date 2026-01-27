@@ -21,10 +21,7 @@ class SlackConfigurator {
     const client = new SlackApiClient("");
     const rotateTokensResponse = client.rotateTokens(this.refresh_token);
 
-    this.property.setProperty(
-      SLACK_REFRESH_TOKEN_KEY,
-      rotateTokensResponse.refresh_token
-    );
+    this.property.setProperty(SLACK_REFRESH_TOKEN_KEY, rotateTokensResponse.refresh_token);
 
     return rotateTokensResponse.token;
   }

@@ -8,8 +8,7 @@ class SlackCredentialStore {
   public constructor(private propertyStore: Properties) {}
 
   public getCredential(): Credentials | null {
-    const slackCredential =
-      this.propertyStore.getProperty(SLACK_CREDENTIAL_KEY);
+    const slackCredential = this.propertyStore.getProperty(SLACK_CREDENTIAL_KEY);
 
     if (slackCredential) {
       try {
@@ -26,10 +25,7 @@ class SlackCredentialStore {
   }
 
   public setCredential(credentail: Credentials): void {
-    this.propertyStore.setProperty(
-      SLACK_CREDENTIAL_KEY,
-      JSON.stringify(credentail)
-    );
+    this.propertyStore.setProperty(SLACK_CREDENTIAL_KEY, JSON.stringify(credentail));
   }
 
   public removeCredential(): void {

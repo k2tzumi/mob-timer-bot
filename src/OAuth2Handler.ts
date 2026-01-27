@@ -97,9 +97,7 @@ class OAuth2Handler {
   public get installUrl(): string {
     return `https://slack.com/oauth/v2/authorize?scope=${encodeURI(
       OAuth2Handler.SCOPE
-    )}&client_id=${this.credentials.client_id}&redirect_uri=${
-      this.authorizationUrl
-    }`;
+    )}&client_id=${this.credentials.client_id}&redirect_uri=${this.authorizationUrl}`;
   }
 
   public get reInstallUrl(): string {
@@ -147,9 +145,9 @@ class OAuth2Handler {
       }
     }
 
-    return HtmlService.createHtmlOutput(
-      "Denied. You can close this tab."
-    ).setTitle("OAuth failed.");
+    return HtmlService.createHtmlOutput("Denied. You can close this tab.").setTitle(
+      "OAuth failed."
+    );
   }
 
   /**
@@ -177,10 +175,7 @@ class OAuth2Handler {
       payload: formData,
     };
     this.oAuthAccess = JSON.parse(
-      UrlFetchApp.fetch(
-        "https://slack.com/api/oauth.v2.access",
-        options
-      ).getContentText()
+      UrlFetchApp.fetch("https://slack.com/api/oauth.v2.access", options).getContentText()
     );
 
     if (this.oAuthAccess.ok) {
@@ -188,9 +183,7 @@ class OAuth2Handler {
 
       return this.oAuthAccess;
     } else {
-      console.warn(
-        `OAuth2 access error. response: ${JSON.stringify(this.oAuthAccess)}`
-      );
+      console.warn(`OAuth2 access error. response: ${JSON.stringify(this.oAuthAccess)}`);
       return null;
     }
   }
@@ -205,10 +198,7 @@ class OAuth2Handler {
       // Save channel name.
       this.propertyStore.setProperty("CHANNEL_NAME", incoming_webhook.channel);
       // Save incoming webhooks.
-      this.propertyStore.setProperty(
-        "INCOMING_WEBHOOKS_URL",
-        incoming_webhook.url
-      );
+      this.propertyStore.setProperty("INCOMING_WEBHOOKS_URL", incoming_webhook.url);
     }
   }
 
@@ -219,9 +209,7 @@ class OAuth2Handler {
   };
 
   private createAuthenSuccessHtml(): HtmlOutput {
-    return HtmlService.createHtmlOutput("Success!<br />").setTitle(
-      "OAuth is now complete."
-    );
+    return HtmlService.createHtmlOutput("Success!<br />").setTitle("OAuth is now complete.");
   }
 }
 
