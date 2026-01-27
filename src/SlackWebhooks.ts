@@ -10,10 +10,7 @@ class SlackWebhooks {
     let response: HTTPResponse;
 
     try {
-      response = UrlFetchApp.fetch(
-        this.incomingWebhookUrl,
-        this.requestOptions(payload)
-      );
+      response = UrlFetchApp.fetch(this.incomingWebhookUrl, this.requestOptions(payload));
     } catch (e) {
       console.warn(`DNS error, etc. ${e.message}`);
       throw new NetworkAccessError(500, e.message);
@@ -30,19 +27,14 @@ class SlackWebhooks {
           if (responseObj.ok) {
             return true;
           } else {
-            throw new Error(
-              `unknow response. response: ${response.getContentText()}`
-            );
+            throw new Error(`unknow response. response: ${response.getContentText()}`);
           }
         }
       default:
         console.warn(
           `Incoming Webhook error. status: ${response.getResponseCode()}, content: ${response.getContentText()}`
         );
-        throw new NetworkAccessError(
-          response.getResponseCode(),
-          response.getContentText()
-        );
+        throw new NetworkAccessError(response.getResponseCode(), response.getContentText());
     }
   }
 
@@ -58,9 +50,7 @@ class SlackWebhooks {
     return this.invoke(payload);
   }
 
-  private requestOptions(
-    payload: string | Record<never, never>
-  ): URLFetchRequestOptions {
+  private requestOptions(payload: string | Record<never, never>): URLFetchRequestOptions {
     const options: URLFetchRequestOptions = {
       headers: this.requestHeader(),
       method: "post",

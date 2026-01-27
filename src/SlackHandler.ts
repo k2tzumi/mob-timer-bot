@@ -1,15 +1,6 @@
-import {
-  SlashCommandHandler,
-  SlashCommandFunction,
-} from "./SlashCommandHandler";
-import {
-  InteractivityHandler,
-  InteractivityFunction,
-} from "./InteractivityHandler";
-import {
-  CallbackEventHandler,
-  CallbackEventFunction,
-} from "./CallbackEventHandler";
+import { SlashCommandHandler, SlashCommandFunction } from "./SlashCommandHandler";
+import { InteractivityHandler, InteractivityFunction } from "./InteractivityHandler";
+import { CallbackEventHandler, CallbackEventFunction } from "./CallbackEventHandler";
 
 type TextOutput = GoogleAppsScript.Content.TextOutput;
 
@@ -50,17 +41,11 @@ class SlackHandler {
     this.command.addListener(type, handler);
   }
 
-  public addInteractivityListener(
-    type: string,
-    handler: InteractivityFunction
-  ): void {
+  public addInteractivityListener(type: string, handler: InteractivityFunction): void {
     this.interactivity.addListener(type, handler);
   }
 
-  public addCallbackEventListener(
-    type: string,
-    handler: CallbackEventFunction
-  ): void {
+  public addCallbackEventListener(type: string, handler: CallbackEventFunction): void {
     this.event.addListener(type, handler);
   }
 }

@@ -41,13 +41,11 @@ abstract class SlackBaseHandler<T> {
     }
   }
 
-  protected convertJSONOutput(
-    response: Record<never, never> | null | void
-  ): TextOutput {
+  protected convertJSONOutput(response: Record<never, never> | null | void): TextOutput {
     if (response) {
-      return ContentService.createTextOutput(
-        JSON.stringify(response)
-      ).setMimeType(ContentService.MimeType.JSON);
+      return ContentService.createTextOutput(JSON.stringify(response)).setMimeType(
+        ContentService.MimeType.JSON
+      );
     } else {
       return ContentService.createTextOutput();
     }

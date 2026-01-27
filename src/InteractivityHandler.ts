@@ -5,9 +5,7 @@ type TextOutput = GoogleAppsScript.Content.TextOutput;
 type Interaction = Slack.Interactivity.Interaction;
 type BlockActions = Slack.Interactivity.BlockActions;
 type DoPost = GoogleAppsScript.Events.DoPost;
-type BlockActionsFunction = (
-  blockActions: BlockActions
-) => Record<never, never>;
+type BlockActionsFunction = (blockActions: BlockActions) => Record<never, never>;
 type InteractivityFunction =
   | ((interaction: Interaction) => Record<never, never> | void)
   | BlockActionsFunction;
@@ -27,9 +25,7 @@ class InteractivityHandler extends SlackBaseHandler<InteractivityFunction> {
     return { performed: false, output: null };
   }
 
-  private bindInteractivity(
-    interaction: Interaction
-  ): Record<never, never> | void {
+  private bindInteractivity(interaction: Interaction): Record<never, never> | void {
     const { type, token } = interaction;
     this.validateVerificationToken(token);
 
@@ -37,34 +33,26 @@ class InteractivityHandler extends SlackBaseHandler<InteractivityFunction> {
       case interaction.hasOwnProperty("trigger_id"):
         if (this.isHandleProceeded(interaction.trigger_id)) {
           throw new Error(
-            `Interaction payloads duplicate called. request: ${JSON.stringify(
-              interaction
-            )}`
+            `Interaction payloads duplicate called. request: ${JSON.stringify(interaction)}`
           );
         }
         break;
       case interaction.hasOwnProperty("hash"):
         if (this.isHandleProceeded(interaction.hash)) {
           throw new Error(
-            `Interaction payloads duplicate called. request: ${JSON.stringify(
-              interaction
-            )}`
+            `Interaction payloads duplicate called. request: ${JSON.stringify(interaction)}`
           );
         }
         break;
       default:
-        throw new Error(
-          `Unknow interaction payloads. request: ${JSON.stringify(interaction)}`
-        );
+        throw new Error(`Unknow interaction payloads. request: ${JSON.stringify(interaction)}`);
     }
 
     // Prefer subtype listeners for block actions
     if (type === "block_actions") {
       const blockActions = interaction as BlockActions;
 
-      const blockActionListener = this.getListener(
-        blockActions.actions[0].type
-      );
+      const blockActionListener = this.getListener(blockActions.actions[0].type);
 
       if (blockActionListener) {
         blockActionListener(blockActions);
@@ -78,9 +66,7 @@ class InteractivityHandler extends SlackBaseHandler<InteractivityFunction> {
       return interactivityListner(interaction);
     }
 
-    throw new Error(
-      `Undifine interaction listner. payload: ${JSON.stringify(interaction)}`
-    );
+    throw new Error(`Undifine interaction listner. payload: ${JSON.stringify(interaction)}`);
   }
 }
 

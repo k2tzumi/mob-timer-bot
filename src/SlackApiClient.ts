@@ -175,11 +175,7 @@ class SlackApiClient {
     }
   }
 
-  public updateViews(
-    views: Record<never, never>,
-    hash: string,
-    view_id: string
-  ): void {
+  public updateViews(views: Record<never, never>, hash: string, view_id: string): void {
     const endPoint = SlackApiClient.BASE_PATH + "views.update";
     const payload: Record<never, never> = {
       view: views,
@@ -198,11 +194,7 @@ class SlackApiClient {
     }
   }
 
-  public addReactions(
-    channel: string,
-    name: string,
-    timestamp: string
-  ): boolean {
+  public addReactions(channel: string, name: string, timestamp: string): boolean {
     const endPoint = SlackApiClient.BASE_PATH + "reactions.add";
     const payload: Record<never, never> = {
       channel,
@@ -282,10 +274,7 @@ class SlackApiClient {
     }
     payload = { ...payload, text };
 
-    const response = this.invokeAPI(
-      endPoint,
-      payload
-    ) as ChatPostMessageResponse;
+    const response = this.invokeAPI(endPoint, payload) as ChatPostMessageResponse;
 
     if (!response.ok) {
       console.info(`post message faild. response: ${JSON.stringify(response)}`);
@@ -318,10 +307,7 @@ class SlackApiClient {
     }
     payload = { ...payload, text };
 
-    const response = this.invokeAPI(
-      endPoint,
-      payload
-    ) as ChatScheduleMessageResponse;
+    const response = this.invokeAPI(endPoint, payload) as ChatScheduleMessageResponse;
 
     if (!response.ok) {
       throw new Error(
@@ -334,10 +320,7 @@ class SlackApiClient {
     return response.scheduled_message_id;
   }
 
-  public chatDeleteScheduleMessage(
-    channel: string,
-    scheduled_message_id: string
-  ): boolean {
+  public chatDeleteScheduleMessage(channel: string, scheduled_message_id: string): boolean {
     const endPoint = SlackApiClient.BASE_PATH + "chat.deleteScheduledMessage";
     const payload: Record<never, never> = {
       channel,
@@ -382,10 +365,7 @@ class SlackApiClient {
       payload = { ...payload, oldest };
     }
 
-    const response = this.invokeAPI(
-      endPoint,
-      payload
-    ) as ConversationsHistoryResponse;
+    const response = this.invokeAPI(endPoint, payload) as ConversationsHistoryResponse;
 
     if (!response.ok) {
       throw new Error(
@@ -428,18 +408,13 @@ class SlackApiClient {
     }
   }
 
-  public createAppsManifest(
-    appsManifest: AppsManifest
-  ): CreateAppsManifestResponse {
+  public createAppsManifest(appsManifest: AppsManifest): CreateAppsManifestResponse {
     const endPoint = SlackApiClient.BASE_PATH + "apps.manifest.create";
     const manifest = JSON.stringify(appsManifest);
     let payload: Record<never, never> = {};
     payload = { ...payload, manifest };
 
-    const response = this.invokeAPI(
-      endPoint,
-      payload
-    ) as CreateAppsManifestResponse;
+    const response = this.invokeAPI(endPoint, payload) as CreateAppsManifestResponse;
 
     if (!response.ok) {
       throw new Error(
@@ -452,10 +427,7 @@ class SlackApiClient {
     return response;
   }
 
-  public updateAppsManifest(
-    app_id: string,
-    appsManifest: AppsManifest
-  ): UpdateManifestResponse {
+  public updateAppsManifest(app_id: string, appsManifest: AppsManifest): UpdateManifestResponse {
     const endPoint = SlackApiClient.BASE_PATH + "apps.manifest.update";
     const manifest = JSON.stringify(appsManifest);
     let payload: Record<never, never> = {
@@ -463,10 +435,7 @@ class SlackApiClient {
     };
     payload = { ...payload, manifest };
 
-    const response = this.invokeAPI(
-      endPoint,
-      payload
-    ) as UpdateManifestResponse;
+    const response = this.invokeAPI(endPoint, payload) as UpdateManifestResponse;
 
     if (!response.ok) {
       throw new Error(
@@ -520,20 +489,14 @@ class SlackApiClient {
   /**
    * @see https://api.slack.com/methods/conversations.replies
    */
-  public conversationsReplies(
-    channel: string,
-    ts: string
-  ): ConversationsRepliesResponse {
+  public conversationsReplies(channel: string, ts: string): ConversationsRepliesResponse {
     const endPoint = SlackApiClient.BASE_PATH + "conversations.replies";
     const payload: Record<never, never> = {
       channel,
       ts,
     };
 
-    const response = this.invokeAPI(
-      endPoint,
-      payload
-    ) as ConversationsRepliesResponse;
+    const response = this.invokeAPI(endPoint, payload) as ConversationsRepliesResponse;
 
     if (!response.ok) {
       throw new Error(
@@ -579,8 +542,7 @@ class SlackApiClient {
               const contextBlock = block as ContextBlock;
               contextBlock.elements.forEach((element) => {
                 if (element.hasOwnProperty("text")) {
-                  const textCompositionObject =
-                    element as TextCompositionObject;
+                  const textCompositionObject = element as TextCompositionObject;
 
                   textArray.push(textCompositionObject.text);
                 }
@@ -620,9 +582,7 @@ class SlackApiClient {
     };
   }
 
-  private postRequestOptions(
-    payload: string | Record<never, never>
-  ): URLFetchRequestOptions {
+  private postRequestOptions(payload: string | Record<never, never>): URLFetchRequestOptions {
     const options: URLFetchRequestOptions = {
       method: "post",
       headers: this.postRequestHeader(),
@@ -654,10 +614,7 @@ class SlackApiClient {
     try {
       switch (this.preferredHttpMethod(endPoint)) {
         case "post":
-          response = UrlFetchApp.fetch(
-            endPoint,
-            this.postRequestOptions(payload)
-          );
+          response = UrlFetchApp.fetch(endPoint, this.postRequestOptions(payload));
           break;
         case "get":
           response = UrlFetchApp.fetch(
@@ -680,10 +637,7 @@ class SlackApiClient {
         console.warn(
           `Slack API error. endpoint: ${endPoint}, status: ${response.getResponseCode()}, content: ${response.getContentText()}`
         );
-        throw new NetworkAccessError(
-          response.getResponseCode(),
-          response.getContentText()
-        );
+        throw new NetworkAccessError(response.getResponseCode(), response.getContentText());
     }
   }
 
@@ -699,10 +653,7 @@ class SlackApiClient {
     }
   }
 
-  private formUrlEncoded(
-    endPoint: string,
-    payload: Record<never, never>
-  ): string {
+  private formUrlEncoded(endPoint: string, payload: Record<never, never>): string {
     const query = Object.entries<string>(payload)
       .map(([key, value]) => `${key}=${encodeURI(value)}`)
       .join("&");
