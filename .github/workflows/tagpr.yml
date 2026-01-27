@@ -26,6 +26,8 @@ jobs:
           node-version: 22
       - run: npm ci
       - run: npm install simple-git
+      - name: Discard local changes before checkout
+        run: git checkout -- .
       - name: Trigger CI Workflow
         uses: actions/github-script@v7
         with:
