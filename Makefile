@@ -8,24 +8,37 @@ help:
 
 .clasp.json:
 	make login
-	$(CLASP) create --title mob-timer-bot --type webapp --rootDir ./src
-	mv src/.clasp.json .
-	$(CLASP) setting fileExtension ts
-	# $(CLASP) setting filePushOrder
-	sed -i -e 's/}/,"filePushOrder":["src\/OAuth2Handler.ts","src\/SlackBaseHandler.ts","src\/BaseError.ts"]}/' .clasp.json
-	rm -f .clasp.json-e
+	$(CLASP) create --title mob-timer-bot --type webapp --rootDir ./dist
+
+dist/Code.js:
+	make build
 
 node_modules:
-	npm ci
+	npm install
+
+.PHONY: install
+install: ## Install packages
+install: node_modules
+
+.PHONY: upgrade
+upgrade: ## Upgrades package.json
+upgrade:
+	npx -p npm-check-updates -c "ncu -u"
+	npm update
 
 .PHONY: login
 login: ## Google login
 login:
 	$(CLASP) login
 
+.PHONY: build
+build: ## Build Google apps scripts
+build: node_modules lint
+	npm run build
+
 .PHONY: push
 push: ## Push Google apps scripts
-push: .clasp.json lint
+push: .clasp.json dist/Code.js
 	$(CLASP) push -f
 
 .PHONY: deploy
@@ -54,14 +67,24 @@ pull: .clasp.json
 	$(CLASP) pull
 
 .PHONY: lint
-lint: ## Run tslint
+lint: ## Run ESLint
 lint: node_modules
 	npm run lint
+
+.PHONY: format
+format: ## Run Prettier format
+format: node_modules
+	npm run format
 
 .PHONY: test
 test: ## Run jest
 test: node_modules
 	npm test
+
+.PHONY: clean
+clean: ## clean rollup bundle
+clean:
+	rm -f dist/Code.js*
 
 .PHONY: undeploy
 undeploy: ## all undeploy Google apps scripts
