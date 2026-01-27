@@ -1,27 +1,26 @@
 {
-    "compilerOptions": {
-        "target": "es2019",
-        "module": "commonjs",
-        "lib": [
-            "es2019"
-        ],
-        "declaration": false,
-        "outDir": "dist",
-        "strict": true,
-        "esModuleInterop": true,
-        "sourceMap": true,
-        "moduleResolution": "node",
-        "noImplicitReturns": true,
-        "noImplicitAny": true,
-        "noUnusedLocals": true,
-        "noUnusedParameters": true,
-        "useUnknownInCatchVariables": true
-    },
-    "include": [
-        "src/**/*"
-    ],
-    "exclude": [
-        "node_modules",
-        "dist"
-    ]
+  "compilerOptions": {
+    "target": "ES2019",
+    "lib": ["ES2019"],
+    "module": "ESNext",
+    "moduleResolution": "node",
+    "outDir": "./dist",
+    "declaration": false,
+    "strict": false,
+    "strictNullChecks": false,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "resolveJsonModule": true,
+    "sourceMap": true,
+    "noUnusedLocals": false,
+    "noImplicitReturns": false,
+    "noFallthroughCasesInSwitch": false,
+    "noImplicitAny": false,
+    "noUnusedParameters": false,
+    "useUnknownInCatchVariables": false,
+    "typeRoots": ["node_modules/@types"]
+  },
+  "include": ["./src/**/*", "./__tests__/**/*"],
+  "exclude": ["node_modules", "dist"]
 }
