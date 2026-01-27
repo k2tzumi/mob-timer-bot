@@ -24,9 +24,12 @@ module.exports = {
     testMatch: ["**/__tests__/**/*.[jt]s?(x)", "**/?(*.)+(spec|test).[jt]s?(x)"],
     testEnvironment: 'node',
     transform: {
-        '^.+\\.tsx?$': ['ts-jest', { tsconfig: "tsconfig.json", diagnostics: false }]
+        '^.+\\.(ts|tsx)$': ['ts-jest', { tsconfig: "tsconfig.json", diagnostics: false }]
     },
     transformIgnorePatterns: [
-        "/node_modules/(?!apps-script-jobqueue)"
-    ]
+        "/node_modules/"
+    ],
+    moduleNameMapper: {
+        "^apps-script-jobqueue$": "<rootDir>/__mocks__/apps-script-jobqueue.ts"
+    }
 };
