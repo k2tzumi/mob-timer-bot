@@ -8,7 +8,7 @@ help:
 
 .clasp.json:
 	make login
-	$(CLASP) create --title mob-timer-bot --type webapp --rootDir ./dist
+	$(CLASP) create-script --title mob-timer-bot --rootDir ./dist
 
 dist/Code.js:
 	make build
