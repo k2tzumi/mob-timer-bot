@@ -3,8 +3,57 @@ import commonjs from '@rollup/plugin-commonjs';
 import typescript from 'rollup-plugin-typescript2';
 import ts from 'typescript';
 
-// GAS entry point functions to expose globally
-const gasEntryPoints = ['doGet', 'doPost', 'jobEventHandler', 'handleCallback'];
+const getExportedFunctionNames = (filePath) => {
+  const program = ts.createProgram([filePath], {
+    target: ts.ScriptTarget.ESNext,
+    module: ts.ModuleKind.CommonJS
+  });
+  const checker = program.getTypeChecker();
+  const sourceFile = program.getSourceFile(filePath);
+  const functionNames = [];
+
+  if (!sourceFile) return functionNames;
+
+  const moduleSymbol = checker.getSymbolAtLocation(sourceFile);
+  if (!moduleSymbol) return functionNames;
+
+  const exports = checker.getExportsOfModule(moduleSymbol);
+
+  exports.forEach((symbol) => {
+    let targetSymbol = symbol;
+    if (symbol.flags & ts.SymbolFlags.Alias) {
+      targetSymbol = checker.getAliasedSymbol(symbol);
+    }
+
+    const declarations = targetSymbol.getDeclarations() || [];
+    
+    const isFunction = declarations.some(decl => {
+      if (ts.isFunctionDeclaration(decl)) return true;
+      
+      if (ts.isVariableDeclaration(decl)) {
+        if (decl.initializer) {
+          return (
+            ts.isArrowFunction(decl.initializer) || 
+            ts.isFunctionExpression(decl.initializer)
+          );
+        }
+        const type = checker.getTypeAtLocation(decl);
+        const signatures = type.getCallSignatures();
+        return signatures.length > 0;
+      }
+
+      return false;
+    });
+
+    if (isFunction) {
+      functionNames.push(symbol.getName());
+    }
+  });
+
+  return functionNames;
+};
+
+const targetFunctions = getExportedFunctionNames('src/Code.ts');
 
 export default {
   input: 'src/Code.ts',
@@ -12,8 +61,16 @@ export default {
     file: 'dist/Code.js',
     format: 'iife',
     name: 'MobTimerBot',
-    footer: gasEntryPoints.map(fn => `function ${fn}(e) { return MobTimerBot.${fn}(e); }`).join('\n')
-  },
+    sourcemap: true,
+    banner: `/**
+ * Mob Timer Bot for Google Apps Script
+${targetFunctions.map(fn => ` * @function ${fn}`).join('\n')}
+ */`,
+    footer: `
+/* Global scope exports */
+${targetFunctions.map(fn => `this.${fn} = MobTimerBot.${fn};`).join('\n')}
+`
+},
   plugins: [
     resolve({
       browser: false,
