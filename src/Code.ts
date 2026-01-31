@@ -85,35 +85,74 @@ function doGet(request: DoGet): HtmlOutput {
       template.reInstallUrl = handler.reInstallUrl;
     } else {
       template = HtmlService.createTemplate(
-        `Reinstallation is complete.<br /><a href="<?= requestUrl ?>" target="_parent">refresh</a>.`
+        "Reinstallation is complete.<br />" +
+          '<a href="javascript:void(0)" id="refresh-link">refresh</a>.' +
+          "<script>" +
+          '  var requestUrl = "<?!= requestUrl ?>";' +
+          '  document.getElementById("refresh-link").onclick = function(e) {' +
+          "    e.preventDefault();" +
+          "    window.top.location.href = requestUrl;" +
+          "  };" +
+          "</script>"
       );
       template.requestUrl = ScriptApp.getService().getUrl();
     }
-    return HtmlService.createHtmlOutput(template.evaluate()).setTitle("");
+
+    return template
+      .evaluate()
+      .setTitle("Reinstallation Complete")
+      .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
   }
 
   if (handler.verifyAccessToken()) {
     const template = HtmlService.createTemplate(
       "OK!<br />" +
-        '<a href="<?!= reInstallUrl ?>" target="_parent" style="align-items:center;color:#000;background-color:#fff;border:1px solid #ddd;border-radius:4px;display:inline-flex;font-family:Lato, sans-serif;font-size:16px;font-weight:600;height:48px;justify-content:center;text-decoration:none;width:236px"><svg xmlns="http://www.w3.org/2000/svg" style="height:20px;width:20px;margin-right:12px" viewBox="0 0 122.8 122.8"><path d="M25.8 77.6c0 7.1-5.8 12.9-12.9 12.9S0 84.7 0 77.6s5.8-12.9 12.9-12.9h12.9v12.9zm6.5 0c0-7.1 5.8-12.9 12.9-12.9s12.9 5.8 12.9 12.9v32.3c0 7.1-5.8 12.9-12.9 12.9s-12.9-5.8-12.9-12.9V77.6z" fill="#e01e5a"></path><path d="M45.2 25.8c-7.1 0-12.9-5.8-12.9-12.9S38.1 0 45.2 0s12.9 5.8 12.9 12.9v12.9H45.2zm0 6.5c7.1 0 12.9 5.8 12.9 12.9s-5.8 12.9-12.9 12.9H12.9C5.8 58.1 0 52.3 0 45.2s5.8-12.9 12.9-12.9h32.3z" fill="#36c5f0"></path><path d="M97 45.2c0-7.1 5.8-12.9 12.9-12.9s12.9 5.8 12.9 12.9-5.8 12.9-12.9 12.9H97V45.2zm-6.5 0c0 7.1-5.8 12.9-12.9 12.9s-12.9-5.8-12.9-12.9V12.9C64.7 5.8 70.5 0 77.6 0s12.9 5.8 12.9 12.9v32.3z" fill="#2eb67d"></path><path d="M77.6 97c7.1 0 12.9 5.8 12.9 12.9s-5.8 12.9-12.9 12.9-12.9-5.8-12.9-12.9V97h12.9zm0-6.5c-7.1 0-12.9-5.8-12.9-12.9s5.8-12.9 12.9-12.9h32.3c7.1 0 12.9 5.8 12.9 12.9s-5.8 12.9-12.9 12.9H77.6z" fill="#ecb22e"></path></svg>Reinstall to Slack</a>'
+        '<a href="javascript:void(0)" id="reinstall-btn" style="align-items:center;color:#000;background-color:#fff;border:1px solid #ddd;border-radius:4px;display:inline-flex;font-family:Lato, sans-serif;font-size:16px;font-weight:600;height:48px;justify-content:center;text-decoration:none;width:236px">' +
+        '<svg xmlns="http://www.w3.org/2000/svg" style="height:20px;width:20px;margin-right:12px" viewBox="0 0 122.8 122.8"><path d="M25.8 77.6c0 7.1-5.8 12.9-12.9 12.9S0 84.7 0 77.6s5.8-12.9 12.9-12.9h12.9v12.9zm6.5 0c0-7.1 5.8-12.9 12.9-12.9s12.9 5.8 12.9 12.9v32.3c0 7.1-5.8 12.9-12.9 12.9s-12.9-5.8-12.9-12.9V77.6z" fill="#e01e5a"></path><path d="M45.2 25.8c-7.1 0-12.9-5.8-12.9-12.9S38.1 0 45.2 0s12.9 5.8 12.9 12.9v12.9H45.2zm0 6.5c7.1 0 12.9 5.8 12.9 12.9s-5.8 12.9-12.9 12.9H12.9C5.8 58.1 0 52.3 0 45.2s5.8-12.9 12.9-12.9h32.3z" fill="#36c5f0"></path><path d="M97 45.2c0-7.1 5.8-12.9 12.9-12.9s12.9 5.8 12.9 12.9-5.8 12.9-12.9 12.9H97V45.2zm-6.5 0c0 7.1-5.8 12.9-12.9 12.9s-12.9-5.8-12.9-12.9V12.9C64.7 5.8 70.5 0 77.6 0s12.9 5.8 12.9 12.9v32.3z" fill="#2eb67d"></path><path d="M77.6 97c7.1 0 12.9 5.8 12.9 12.9s-5.8 12.9-12.9 12.9-12.9-5.8-12.9-12.9V97h12.9zm0-6.5c-7.1 0-12.9-5.8-12.9-12.9s5.8-12.9 12.9-12.9h32.3c7.1 0 12.9 5.8 12.9 12.9s-5.8 12.9-12.9 12.9H77.6z" fill="#ecb22e"></path></svg>Reinstall to Slack</a>' +
+        "<script>" +
+        '  var reInstallUrl = "<?!= reInstallUrl ?>";' +
+        '  document.getElementById("reinstall-btn").onclick = function(e) {' +
+        "    e.preventDefault();" +
+        '    window.open(reInstallUrl, "_blank");' +
+        "  };" +
+        "</script>"
     );
+
     template.reInstallUrl = handler.requestURL + "?reinstall=true";
-    return HtmlService.createHtmlOutput(template.evaluate()).setTitle(
-      "Installation on Slack is complete"
-    );
+
+    return template
+      .evaluate()
+      .setTitle("Installation on Slack is complete")
+      .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
   }
   if (request.parameter.hasOwnProperty("token")) {
     return configuration(request.parameter);
   } else {
     const template = HtmlService.createTemplate(
-      '<a href="https://api.slack.com/authentication/config-tokens#creating" target="_blank">Create configuration token</a><br />' +
-        '<form action="<?!= requestURL ?>" method="get" target="_parent"><p>Configuration Tokens(Refresh Token):<input type="password" name="token" value="<?!= refreshToken ?>"></p><input type="submit" name="" value="Create App"></form>'
+      "<div>" +
+        '<a href="https://api.slack.com/authentication/config-tokens#creating" target="_blank">Create configuration token</a><br /><br />' +
+        "Configuration Tokens(Refresh Token):<br />" +
+        '<input type="password" id="token" value="<?!= refreshToken ?>"><br /><br />' +
+        '<input type="button" value="Create App" onclick="redirectToApp()">' +
+        "</div>" +
+        "<script>" +
+        "function redirectToApp() {" +
+        '  const token = document.getElementById("token").value;' +
+        '  const baseURL = "<?!= requestURL ?>";' +
+        '  const url = baseURL + (baseURL.indexOf("?") === -1 ? "?" : "&") + "token=" + encodeURIComponent(token);' +
+        "  " +
+        "  window.top.location.href = url;" +
+        "}" +
+        "</script>"
     );
+
     template.requestURL = handler.requestURL;
     template.refreshToken = new SlackConfigurator().refresh_token;
-    return HtmlService.createHtmlOutput(template.evaluate()).setTitle(
-      "Start Slack application configuration."
-    );
+
+    return template
+      .evaluate()
+      .setTitle("Start Slack application configuration.")
+      .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
   }
 }
 
@@ -136,13 +175,23 @@ function configuration(data: { [key: string]: string }): HtmlOutput {
   );
 
   const template = HtmlService.createTemplate(
-    '<a href="<?!= installUrl ?>" target="_parent" style="align-items:center;color:#000;background-color:#fff;border:1px solid #ddd;border-radius:4px;display:inline-flex;font-family:Lato, sans-serif;font-size:16px;font-weight:600;height:48px;justify-content:center;text-decoration:none;width:236px"><svg xmlns="http://www.w3.org/2000/svg" style="height:20px;width:20px;margin-right:12px" viewBox="0 0 122.8 122.8"><path d="M25.8 77.6c0 7.1-5.8 12.9-12.9 12.9S0 84.7 0 77.6s5.8-12.9 12.9-12.9h12.9v12.9zm6.5 0c0-7.1 5.8-12.9 12.9-12.9s12.9 5.8 12.9 12.9v32.3c0 7.1-5.8 12.9-12.9 12.9s-12.9-5.8-12.9-12.9V77.6z" fill="#e01e5a"></path><path d="M45.2 25.8c-7.1 0-12.9-5.8-12.9-12.9S38.1 0 45.2 0s12.9 5.8 12.9 12.9v12.9H45.2zm0 6.5c7.1 0 12.9 5.8 12.9 12.9s-5.8 12.9-12.9 12.9H12.9C5.8 58.1 0 52.3 0 45.2s5.8-12.9 12.9-12.9h32.3z" fill="#36c5f0"></path><path d="M97 45.2c0-7.1 5.8-12.9 12.9-12.9s12.9 5.8 12.9 12.9-5.8 12.9-12.9 12.9H97V45.2zm-6.5 0c0 7.1-5.8 12.9-12.9 12.9s-12.9-5.8-12.9-12.9V12.9C64.7 5.8 70.5 0 77.6 0s12.9 5.8 12.9 12.9v32.3z" fill="#2eb67d"></path><path d="M77.6 97c7.1 0 12.9 5.8 12.9 12.9s-5.8 12.9-12.9 12.9-12.9-5.8-12.9-12.9V97h12.9zm0-6.5c-7.1 0-12.9-5.8-12.9-12.9s5.8-12.9 12.9-12.9h32.3c7.1 0 12.9 5.8 12.9 12.9s-5.8 12.9-12.9 12.9H77.6z" fill="#ecb22e"></path></svg>Add to Slack</a>'
+    '<a href="#" id="slack-btn" target="_blank" style="align-items:center;color:#000;background-color:#fff;border:1px solid #ddd;border-radius:4px;display:inline-flex;font-family:Lato, sans-serif;font-size:16px;font-weight:600;height:48px;justify-content:center;text-decoration:none;width:236px">' +
+      '<svg xmlns="http://www.w3.org/2000/svg" style="height:20px;width:20px;margin-right:12px" viewBox="0 0 122.8 122.8"><path d="M25.8 77.6c0 7.1-5.8 12.9-12.9 12.9S0 84.7 0 77.6s5.8-12.9 12.9-12.9h12.9v12.9zm6.5 0c0-7.1 5.8-12.9 12.9-12.9s12.9 5.8 12.9 12.9v32.3c0 7.1-5.8 12.9-12.9 12.9s-12.9-5.8-12.9-12.9V77.6z" fill="#e01e5a"></path><path d="M45.2 25.8c-7.1 0-12.9-5.8-12.9-12.9S38.1 0 45.2 0s12.9 5.8 12.9 12.9v12.9H45.2zm0 6.5c7.1 0 12.9 5.8 12.9 12.9s-5.8 12.9-12.9 12.9H12.9C5.8 58.1 0 52.3 0 45.2s5.8-12.9 12.9-12.9h32.3z" fill="#36c5f0"></path><path d="M97 45.2c0-7.1 5.8-12.9 12.9-12.9s12.9 5.8 12.9 12.9-5.8 12.9-12.9 12.9H97V45.2zm-6.5 0c0 7.1-5.8 12.9-12.9 12.9s-12.9-5.8-12.9-12.9V12.9C64.7 5.8 70.5 0 77.6 0s12.9 5.8 12.9 12.9v32.3z" fill="#2eb67d"></path><path d="M77.6 97c7.1 0 12.9 5.8 12.9 12.9s-5.8 12.9-12.9 12.9-12.9-5.8-12.9-12.9V97h12.9zm0-6.5c-7.1 0-12.9-5.8-12.9-12.9s5.8-12.9 12.9-12.9h32.3c7.1 0 12.9 5.8 12.9 12.9s-5.8 12.9-12.9 12.9H77.6z" fill="#ecb22e"></path></svg>Add to Slack</a>' +
+      "<script>" +
+      '  var installUrl = "<?!= installUrl ?>";' +
+      '  var btn = document.getElementById("slack-btn");' +
+      "  btn.onclick = function(e) {" +
+      "    e.preventDefault();" +
+      '    window.open(installUrl, "_blank");' +
+      "  };" +
+      "</script>"
   );
   template.installUrl = oAuth2Handler.installUrl;
 
-  return HtmlService.createHtmlOutput(template.evaluate()).setTitle(
-    "Slack application configuration is complete."
-  );
+  return template
+    .evaluate()
+    .setSandboxMode(HtmlService.SandboxMode.IFRAME)
+    .setTitle("Slack application configuration is complete.");
 }
 
 function createAppsManifest(redirectUrls: string[] = [], requestUrl = ""): AppsManifest {
@@ -1208,4 +1257,12 @@ function pickUser(users: string[], times: number) {
   return `<@${user}>`;
 }
 
-export { executeSlashCommand, changeOrder, FormValue, doGet, doPost, jobEventHandler };
+export {
+  executeSlashCommand,
+  changeOrder,
+  FormValue,
+  doGet,
+  doPost,
+  jobEventHandler,
+  handleCallback,
+};

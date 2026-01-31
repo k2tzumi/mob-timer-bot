@@ -4,7 +4,7 @@ import typescript from 'rollup-plugin-typescript2';
 import ts from 'typescript';
 
 // GAS entry point functions to expose globally
-const gasEntryPoints = ['doGet', 'doPost', 'jobEventHandler'];
+const gasEntryPoints = ['doGet', 'doPost', 'jobEventHandler', 'handleCallback'];
 
 export default {
   input: 'src/Code.ts',
