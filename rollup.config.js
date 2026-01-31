@@ -2,7 +2,9 @@ import resolve from '@rollup/plugin-node-resolve';
 import commonjs from '@rollup/plugin-commonjs';
 import typescript from 'rollup-plugin-typescript2';
 import ts from 'typescript';
-import cleanup from 'rollup-plugin-cleanup';
+
+// GAS entry point functions to expose globally
+const gasEntryPoints = ['doGet', 'doPost', 'jobEventHandler'];
 
 export default {
   input: 'src/Code.ts',
@@ -10,17 +12,7 @@ export default {
     file: 'dist/Code.js',
     format: 'iife',
     name: 'MobTimerBot',
-    // Expose functions to global scope for GAS
-    footer: `
-function doGet(e) { return MobTimerBot.doGet(e); }
-function doPost(e) { return MobTimerBot.doPost(e); }
-function jobEventHandler(e) { return MobTimerBot.jobEventHandler(e); }
-`,
-    sourcemap: true,
-    banner: `/**
- * Mob Timer Bot for Google Apps Script
- */
-`
+    footer: gasEntryPoints.map(fn => `function ${fn}(e) { return MobTimerBot.${fn}(e); }`).join('\n')
   },
   plugins: [
     resolve({
@@ -43,10 +35,6 @@ function jobEventHandler(e) { return MobTimerBot.jobEventHandler(e); }
       },
       useTsconfigDeclarationDir: false,
       check: false
-    }),
-    cleanup({
-      comments: 'none',
-      extensions: ['ts']
     })
   ],
   external: []
