@@ -35,6 +35,7 @@ login:
 build: ## Build Google apps scripts
 build: node_modules lint
 	npm run build
+	cp src/appsscript.json dist/
 
 .PHONY: push
 push: ## Push Google apps scripts
