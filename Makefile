@@ -13,6 +13,9 @@ help:
 dist/Code.js:
 	make build
 
+dist/appsscript.json: src/appsscript.json
+	cp src/appsscript.json dist/
+
 node_modules:
 	npm install
 
@@ -33,9 +36,8 @@ login:
 
 .PHONY: build
 build: ## Build Google apps scripts
-build: node_modules lint
+build: node_modules lint dist/appsscript.json
 	npm run build
-	cp src/appsscript.json dist/
 
 .PHONY: push
 push: ## Push Google apps scripts
