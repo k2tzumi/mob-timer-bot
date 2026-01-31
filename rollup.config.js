@@ -2,45 +2,23 @@ import resolve from '@rollup/plugin-node-resolve';
 import commonjs from '@rollup/plugin-commonjs';
 import typescript from 'rollup-plugin-typescript2';
 import ts from 'typescript';
-
-/**
- * Custom plugin to remove export statements for Google Apps Script compatibility.
- * GAS doesn't support ES modules, so we need to remove export/import statements
- * and keep functions in global scope.
- */
-function gasCompatibility() {
-  return {
-    name: 'gas-compatibility',
-    renderChunk(code) {
-      // Remove export statements at the end of the file
-      // Handles: export { a, b, c };
-      let result = code.replace(/^export\s*\{[^}]*\};?\s*$/gm, '');
-
-      // Remove export default statements
-      result = result.replace(/^export\s+default\s+/gm, '');
-
-      // Remove export from function/const/let/var declarations
-      result = result.replace(/^export\s+(function|const|let|var|class)\s+/gm, '$1 ');
-
-      return {
-        code: result,
-        map: null
-      };
-    }
-  };
-}
+import cleanup from 'rollup-plugin-cleanup';
 
 export default {
   input: 'src/Code.ts',
   output: {
     file: 'dist/Code.js',
-    format: 'esm',
+    format: 'iife',
+    name: 'MobTimerBot',
+    // Expose functions to global scope for GAS
+    footer: `
+function doGet(e) { return MobTimerBot.doGet(e); }
+function doPost(e) { return MobTimerBot.doPost(e); }
+function jobEventHandler(e) { return MobTimerBot.jobEventHandler(e); }
+`,
     sourcemap: true,
     banner: `/**
  * Mob Timer Bot for Google Apps Script
- * @function doGet
- * @function doPost
- * @function jobEventHandler
  */
 `
   },
@@ -58,8 +36,7 @@ export default {
           declarationMap: false,
           rootDir: './src',
           skipLibCheck: true,
-          noEmitOnError: false,
-          module: 'ESNext'
+          noEmitOnError: false
         },
         include: ['./src/**/*'],
         exclude: ['node_modules', 'dist', '__tests__']
@@ -67,13 +44,10 @@ export default {
       useTsconfigDeclarationDir: false,
       check: false
     }),
-    gasCompatibility()
+    cleanup({
+      comments: 'none',
+      extensions: ['ts']
+    })
   ],
-  // Mark nothing as external - bundle everything
-  external: [],
-  // Disable tree shaking for entry point to preserve all exports
-  treeshake: {
-    moduleSideEffects: true,
-    propertyReadSideEffects: true
-  }
+  external: []
 };
