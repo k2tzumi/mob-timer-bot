@@ -8,10 +8,13 @@ help:
 
 .clasp.json:
 	make login
-	$(CLASP) create --title mob-timer-bot --type webapp --rootDir ./dist
+	$(CLASP) create-script --title mob-timer-bot --rootDir ./dist
 
 dist/Code.js:
 	make build
+
+dist/appsscript.json: src/appsscript.json
+	cp src/appsscript.json dist/
 
 node_modules:
 	npm install
@@ -33,7 +36,7 @@ login:
 
 .PHONY: build
 build: ## Build Google apps scripts
-build: node_modules lint
+build: node_modules lint dist/appsscript.json
 	npm run build
 
 .PHONY: push
@@ -49,12 +52,12 @@ deploy: .clasp.json
 .PHONY: redeploy
 redeploy: ## Re-Deploy Google apps scripts
 redeploy: .clasp.json
-	$(CLASP) deploy --versionNumber `$(CLASP) versions | grep -o '^[0-9]*' | tail -n 1` -d "`npx -c 'echo \"$$npm_package_version\"'`"
+	$(CLASP) redeploy -v `$(CLASP) versions | grep -o '^[0-9]*' | tail -n 1` -d "`npx -c 'echo \"$$npm_package_version\"'`"
 
 .PHONY: open
 open: ## Open Google apps scripts
 open: .clasp.json
-	$(CLASP) open
+	$(CLASP) open-script
 
 .PHONY: application
 application: ## Open web application
