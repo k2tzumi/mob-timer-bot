@@ -1,5 +1,9 @@
 # Changelog
 
+## [v0.0.7](https://github.com/k2tzumi/mob-timer-bot/compare/v0.0.6...v0.0.7) - 2026-02-01
+### Other Changes
+- Update Rollup config for clasp v3 compatibility by @k2tzumi in https://github.com/k2tzumi/mob-timer-bot/pull/44
+
 ## [v0.0.6](https://github.com/k2tzumi/mob-timer-bot/compare/v0.0.5...v0.0.6) - 2026-01-27
 ### Other Changes
 - Bump word-wrap from 1.2.3 to 1.2.4 by @dependabot[bot] in https://github.com/k2tzumi/mob-timer-bot/pull/37
