@@ -66,10 +66,7 @@ export default {
  * Mob Timer Bot for Google Apps Script
 ${targetFunctions.map(fn => ` * @function ${fn}`).join('\n')}
  */`,
-    footer: `
-/* Global scope exports */
-${targetFunctions.map(fn => `this.${fn} = MobTimerBot.${fn};`).join('\n')}
-`
+    footer: targetFunctions.map(fn => `function ${fn}(e) { return MobTimerBot.${fn}(e); }`).join('\n')
 },
   plugins: [
     resolve({
